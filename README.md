@@ -1,8 +1,8 @@
-# ChatterboxToolkitUI 🎙️🧠
+# CloneTTS - Sao Chép Giọng Đọc Đa Ngôn Ngữ 🎙️🧠
 
 **Tác giả:** Lý Trần
 
-ChatterboxToolkitUI là một ứng dụng web sử dụng Gradio, cung cấp giao diện thân thiện để tạo giọng nói, chuyển đổi giọng nói, và quản lý quy trình xử lý âm thanh nâng cao dựa trên mô hình Chatterbox của Resemble AI.
+CloneTTS Giọng Đa Ngôn Ngữ là một ứng dụng web sử dụng Gradio, cung cấp giao diện thân thiện để tạo giọng nói, chuyển đổi giọng nói, và quản lý quy trình xử lý âm thanh nâng cao dựa trên mô hình Chatterbox của Resemble AI.
 
 ## Tính năng nổi bật
 
@@ -38,8 +38,8 @@ ChatterboxToolkitUI là một ứng dụng web sử dụng Gradio, cung cấp gi
 ### 1. Clone dự án
 
 ```bash
-git clone https://github.com/dasjoms/ChatterboxToolkitUI.git
-cd ChatterboxToolkitUI
+git clone https://github.com/ltteamvn/CloneTTS
+cd CloneTTS
 ```
 
 ### 2. Tạo môi trường ảo Python
