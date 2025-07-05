@@ -1,0 +1,2218 @@
+{
+  "Đa Ngôn Ngữ": {
+    "Nam": [
+    {
+      "display_name": "Florian",
+      "voice_code": "de-DE-FlorianMultilingualNeural"
+    },
+    {
+      "display_name": "Andrew",
+      "voice_code": "en-US-AndrewMultilingualNeural"
+    },
+    {
+      "display_name": "Remy",
+      "voice_code": "fr-FR-RemyMultilingualNeural"
+    },
+    {
+      "display_name": "Giuseppe",
+      "voice_code": "it-IT-GiuseppeMultilingualNeural"
+    },
+    {
+        "display_name": "Brian",
+        "voice_code": "en-US-BrianMultilingualNeural"
+      }
+  ],
+  "Nữ": [
+    {
+      "display_name": "Seraphina",
+      "voice_code": "de-DE-SeraphinaMultilingualNeural"
+    },
+    {
+      "display_name": "Ava",
+      "voice_code": "en-US-AvaMultilingualNeural"
+    },
+    {
+      "display_name": "Emma",
+      "voice_code": "en-US-EmmaMultilingualNeural"
+    },
+    {
+      "display_name": "Vivienne",
+      "voice_code": "fr-FR-VivienneMultilingualNeural"
+    }
+  ]
+  },
+  "Tiếng Afrikaans (Nam Phi)": {
+    "Nam": [
+      {
+        "display_name": "Willem",
+        "voice_code": "af-ZA-WillemNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Adri",
+        "voice_code": "af-ZA-AdriNeural"
+      }
+    ]
+  },
+  "Tiếng Amharic (Ethiopia)": {
+    "Nam": [
+      {
+        "display_name": "Ameha",
+        "voice_code": "am-ET-AmehaNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Mekdes",
+        "voice_code": "am-ET-MekdesNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (UAE)": {
+    "Nam": [
+      {
+        "display_name": "Hamdan",
+        "voice_code": "ar-AE-HamdanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Fatima",
+        "voice_code": "ar-AE-FatimaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Bahrain)": {
+    "Nam": [
+      {
+        "display_name": "Ali",
+        "voice_code": "ar-BH-AliNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Laila",
+        "voice_code": "ar-BH-LailaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Algeria)": {
+    "Nam": [
+      {
+        "display_name": "Ismael",
+        "voice_code": "ar-DZ-IsmaelNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Amina",
+        "voice_code": "ar-DZ-AminaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Ai Cập)": {
+    "Nam": [
+      {
+        "display_name": "Shakir",
+        "voice_code": "ar-EG-ShakirNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Salma",
+        "voice_code": "ar-EG-SalmaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Iraq)": {
+    "Nam": [
+      {
+        "display_name": "Bassel",
+        "voice_code": "ar-IQ-BasselNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Rana",
+        "voice_code": "ar-IQ-RanaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Jordan)": {
+    "Nam": [
+      {
+        "display_name": "Taim",
+        "voice_code": "ar-JO-TaimNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sana",
+        "voice_code": "ar-JO-SanaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Kuwait)": {
+    "Nam": [
+      {
+        "display_name": "Fahed",
+        "voice_code": "ar-KW-FahedNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Noura",
+        "voice_code": "ar-KW-NouraNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Lebanon)": {
+    "Nam": [
+      {
+        "display_name": "Rami",
+        "voice_code": "ar-LB-RamiNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Layla",
+        "voice_code": "ar-LB-LaylaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Libya)": {
+    "Nam": [
+      {
+        "display_name": "Omar",
+        "voice_code": "ar-LY-OmarNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Iman",
+        "voice_code": "ar-LY-ImanNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Morocco)": {
+    "Nam": [
+      {
+        "display_name": "Jamal",
+        "voice_code": "ar-MA-JamalNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Mouna",
+        "voice_code": "ar-MA-MounaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Oman)": {
+    "Nam": [
+      {
+        "display_name": "Abdullah",
+        "voice_code": "ar-OM-AbdullahNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Aysha",
+        "voice_code": "ar-OM-AyshaNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Qatar)": {
+    "Nam": [
+      {
+        "display_name": "Moaz",
+        "voice_code": "ar-QA-MoazNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Amal",
+        "voice_code": "ar-QA-AmalNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Ả Rập Xê Út)": {
+    "Nam": [
+      {
+        "display_name": "Hamed",
+        "voice_code": "ar-SA-HamedNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Zariyah",
+        "voice_code": "ar-SA-ZariyahNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Syria)": {
+    "Nam": [
+      {
+        "display_name": "Laith",
+        "voice_code": "ar-SY-LaithNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Amany",
+        "voice_code": "ar-SY-AmanyNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Tunisia)": {
+    "Nam": [
+      {
+        "display_name": "Hedi",
+        "voice_code": "ar-TN-HediNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Reem",
+        "voice_code": "ar-TN-ReemNeural"
+      }
+    ]
+  },
+  "Tiếng Ả Rập (Yemen)": {
+    "Nam": [
+      {
+        "display_name": "Saleh",
+        "voice_code": "ar-YE-SalehNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Maryam",
+        "voice_code": "ar-YE-MaryamNeural"
+      }
+    ]
+  },
+  "Tiếng Azerbaijan": {
+    "Nam": [
+      {
+        "display_name": "Babek",
+        "voice_code": "az-AZ-BabekNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Banu",
+        "voice_code": "az-AZ-BanuNeural"
+      }
+    ]
+  },
+  "Tiếng Bulgaria": {
+    "Nam": [
+      {
+        "display_name": "Borislav",
+        "voice_code": "bg-BG-BorislavNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Kalina",
+        "voice_code": "bg-BG-KalinaNeural"
+      }
+    ]
+  },
+  "Tiếng Bengal (Bangladesh)": {
+    "Nam": [
+      {
+        "display_name": "Pradeep",
+        "voice_code": "bn-BD-PradeepNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Nabanita",
+        "voice_code": "bn-BD-NabanitaNeural"
+      }
+    ]
+  },
+  "Tiếng Bengal (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Bashkar",
+        "voice_code": "bn-IN-BashkarNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Tanishaa",
+        "voice_code": "bn-IN-TanishaaNeural"
+      }
+    ]
+  },
+  "Tiếng Bosnia (Bosnia & Herzegovina)": {
+    "Nam": [
+      {
+        "display_name": "Goran",
+        "voice_code": "bs-BA-GoranNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Vesna",
+        "voice_code": "bs-BA-VesnaNeural"
+      }
+    ]
+  },
+  "Tiếng Catalan (Tây Ban Nha)": {
+    "Nam": [
+      {
+        "display_name": "Enric",
+        "voice_code": "ca-ES-EnricNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Joana",
+        "voice_code": "ca-ES-JoanaNeural"
+      }
+    ]
+  },
+  "Tiếng Séc (Cộng hòa Séc)": {
+    "Nam": [
+      {
+        "display_name": "Antonin",
+        "voice_code": "cs-CZ-AntoninNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Vlasta",
+        "voice_code": "cs-CZ-VlastaNeural"
+      }
+    ]
+  },
+  "Tiếng Wales (Anh)": {
+    "Nam": [
+      {
+        "display_name": "Aled",
+        "voice_code": "cy-GB-AledNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Nia",
+        "voice_code": "cy-GB-NiaNeural"
+      }
+    ]
+  },
+  "Tiếng Đan Mạch (Đan Mạch)": {
+    "Nam": [
+      {
+        "display_name": "Jeppe",
+        "voice_code": "da-DK-JeppeNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Christel",
+        "voice_code": "da-DK-ChristelNeural"
+      }
+    ]
+  },
+  "Tiếng Đức (Áo)": {
+    "Nam": [
+      {
+        "display_name": "Jonas",
+        "voice_code": "de-AT-JonasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Ingrid",
+        "voice_code": "de-AT-IngridNeural"
+      }
+    ]
+  },
+  "Tiếng Đức (Thụy Sĩ)": {
+    "Nam": [
+      {
+        "display_name": "Jan",
+        "voice_code": "de-CH-JanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Leni",
+        "voice_code": "de-CH-LeniNeural"
+      }
+    ]
+  },
+  "Tiếng Đức (Đức)": {
+    "Nam": [
+      {
+        "display_name": "Conrad",
+        "voice_code": "de-DE-ConradNeural"
+      },
+      {
+        "display_name": "Florian (Đa Ngôn Ngữ)",
+        "voice_code": "de-DE-FlorianMultilingualNeural"
+      },
+      {
+        "display_name": "Killian",
+        "voice_code": "de-DE-KillianNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Amala",
+        "voice_code": "de-DE-AmalaNeural"
+      },
+      {
+        "display_name": "Katja",
+        "voice_code": "de-DE-KatjaNeural"
+      },
+      {
+        "display_name": "Seraphina (Đa Ngôn Ngữ)",
+        "voice_code": "de-DE-SeraphinaMultilingualNeural"
+      }
+    ]
+  },
+  "Tiếng Hy Lạp (Hy Lạp)": {
+    "Nam": [
+      {
+        "display_name": "Nestoras",
+        "voice_code": "el-GR-NestorasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Athina",
+        "voice_code": "el-GR-AthinaNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Úc)": {
+    "Nam": [
+      {
+        "display_name": "William",
+        "voice_code": "en-AU-WilliamNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Natasha",
+        "voice_code": "en-AU-NatashaNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Canada)": {
+    "Nam": [
+      {
+        "display_name": "Liam",
+        "voice_code": "en-CA-LiamNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Clara",
+        "voice_code": "en-CA-ClaraNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Anh)": {
+    "Nam": [
+      {
+        "display_name": "Ryan",
+        "voice_code": "en-GB-RyanNeural"
+      },
+      {
+        "display_name": "Thomas",
+        "voice_code": "en-GB-ThomasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Libby",
+        "voice_code": "en-GB-LibbyNeural"
+      },
+      {
+        "display_name": "Maisie",
+        "voice_code": "en-GB-MaisieNeural"
+      },
+      {
+        "display_name": "Sonia",
+        "voice_code": "en-GB-SoniaNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Hồng Kông)": {
+    "Nam": [
+      {
+        "display_name": "Sam",
+        "voice_code": "en-HK-SamNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Yan",
+        "voice_code": "en-HK-YanNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Ireland)": {
+    "Nam": [
+      {
+        "display_name": "Connor",
+        "voice_code": "en-IE-ConnorNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Emily",
+        "voice_code": "en-IE-EmilyNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Prabhat",
+        "voice_code": "en-IN-PrabhatNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Neerja",
+        "voice_code": "en-IN-NeerjaNeural"
+      },
+      {
+        "display_name": "NeerjaExpressive",
+        "voice_code": "en-IN-NeerjaExpressiveNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Kenya)": {
+    "Nam": [
+      {
+        "display_name": "Chilemba",
+        "voice_code": "en-KE-ChilembaNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Asilia",
+        "voice_code": "en-KE-AsiliaNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Nigeria)": {
+    "Nam": [
+      {
+        "display_name": "Abeo",
+        "voice_code": "en-NG-AbeoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Ezinne",
+        "voice_code": "en-NG-EzinneNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (New Zealand)": {
+    "Nam": [
+      {
+        "display_name": "Mitchell",
+        "voice_code": "en-NZ-MitchellNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Molly",
+        "voice_code": "en-NZ-MollyNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Philippines)": {
+    "Nam": [
+      {
+        "display_name": "James",
+        "voice_code": "en-PH-JamesNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Rosa",
+        "voice_code": "en-PH-RosaNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Singapore)": {
+    "Nam": [
+      {
+        "display_name": "Wayne",
+        "voice_code": "en-SG-WayneNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Luna",
+        "voice_code": "en-SG-LunaNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Tanzania)": {
+    "Nam": [
+      {
+        "display_name": "Elimu",
+        "voice_code": "en-TZ-ElimuNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Imani",
+        "voice_code": "en-TZ-ImaniNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Mỹ)": {
+    "Nam": [
+      {
+        "display_name": "Andrew",
+        "voice_code": "en-US-AndrewNeural"
+      },
+      {
+        "display_name": "Andrew (Đa Ngôn Ngữ)",
+        "voice_code": "en-US-AndrewMultilingualNeural"
+      },
+      {
+        "display_name": "Brian",
+        "voice_code": "en-US-BrianNeural"
+      },
+      {
+        "display_name": "Brian (Đa Ngôn Ngữ)",
+        "voice_code": "en-US-BrianMultilingualNeural"
+      },
+      {
+        "display_name": "Christopher",
+        "voice_code": "en-US-ChristopherNeural"
+      },
+      {
+        "display_name": "Eric",
+        "voice_code": "en-US-EricNeural"
+      },
+      {
+        "display_name": "Guy",
+        "voice_code": "en-US-GuyNeural"
+      },
+      {
+        "display_name": "Roger",
+        "voice_code": "en-US-RogerNeural"
+      },
+      {
+        "display_name": "Steffan",
+        "voice_code": "en-US-SteffanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Ana",
+        "voice_code": "en-US-AnaNeural"
+      },
+      {
+        "display_name": "Aria",
+        "voice_code": "en-US-AriaNeural"
+      },
+      {
+        "display_name": "Ava",
+        "voice_code": "en-US-AvaNeural"
+      },
+      {
+        "display_name": "Ava (Đa Ngôn Ngữ)",
+        "voice_code": "en-US-AvaMultilingualNeural"
+      },
+      {
+        "display_name": "Emma",
+        "voice_code": "en-US-EmmaNeural"
+      },
+      {
+        "display_name": "Emma (Đa Ngôn Ngữ)",
+        "voice_code": "en-US-EmmaMultilingualNeural"
+      },
+      {
+        "display_name": "Jenny",
+        "voice_code": "en-US-JennyNeural"
+      },
+      {
+        "display_name": "Michelle",
+        "voice_code": "en-US-MichelleNeural"
+      }
+    ]
+  },
+  "Tiếng Anh (Nam Phi)": {
+    "Nam": [
+      {
+        "display_name": "Luke",
+        "voice_code": "en-ZA-LukeNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Leah",
+        "voice_code": "en-ZA-LeahNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Argentina)": {
+    "Nam": [
+      {
+        "display_name": "Tomas",
+        "voice_code": "es-AR-TomasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Elena",
+        "voice_code": "es-AR-ElenaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Bolivia)": {
+    "Nam": [
+      {
+        "display_name": "Marcelo",
+        "voice_code": "es-BO-MarceloNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sofia",
+        "voice_code": "es-BO-SofiaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Chile)": {
+    "Nam": [
+      {
+        "display_name": "Lorenzo",
+        "voice_code": "es-CL-LorenzoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Catalina",
+        "voice_code": "es-CL-CatalinaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Colombia)": {
+    "Nam": [
+      {
+        "display_name": "Gonzalo",
+        "voice_code": "es-CO-GonzaloNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Salome",
+        "voice_code": "es-CO-SalomeNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Costa Rica)": {
+    "Nam": [
+      {
+        "display_name": "Juan",
+        "voice_code": "es-CR-JuanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Maria",
+        "voice_code": "es-CR-MariaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Cuba)": {
+    "Nam": [
+      {
+        "display_name": "Manuel",
+        "voice_code": "es-CU-ManuelNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Belkys",
+        "voice_code": "es-CU-BelkysNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Dominican)": {
+    "Nam": [
+      {
+        "display_name": "Emilio",
+        "voice_code": "es-DO-EmilioNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Ramona",
+        "voice_code": "es-DO-RamonaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Ecuador)": {
+    "Nam": [
+      {
+        "display_name": "Luis",
+        "voice_code": "es-EC-LuisNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Andrea",
+        "voice_code": "es-EC-AndreaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Tây Ban Nha)": {
+    "Nam": [
+      {
+        "display_name": "Alvaro",
+        "voice_code": "es-ES-AlvaroNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Elvira",
+        "voice_code": "es-ES-ElviraNeural"
+      },
+      {
+        "display_name": "Ximena",
+        "voice_code": "es-ES-XimenaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Guinea Xích Đạo)": {
+    "Nam": [
+      {
+        "display_name": "Javier",
+        "voice_code": "es-GQ-JavierNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Teresa",
+        "voice_code": "es-GQ-TeresaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Guatemala)": {
+    "Nam": [
+      {
+        "display_name": "Andres",
+        "voice_code": "es-GT-AndresNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Marta",
+        "voice_code": "es-GT-MartaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Honduras)": {
+    "Nam": [
+      {
+        "display_name": "Carlos",
+        "voice_code": "es-HN-CarlosNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Karla",
+        "voice_code": "es-HN-KarlaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Mexico)": {
+    "Nam": [
+      {
+        "display_name": "Jorge",
+        "voice_code": "es-MX-JorgeNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Dalia",
+        "voice_code": "es-MX-DaliaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Nicaragua)": {
+    "Nam": [
+      {
+        "display_name": "Federico",
+        "voice_code": "es-NI-FedericoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Yolanda",
+        "voice_code": "es-NI-YolandaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Panama)": {
+    "Nam": [
+      {
+        "display_name": "Roberto",
+        "voice_code": "es-PA-RobertoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Margarita",
+        "voice_code": "es-PA-MargaritaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Peru)": {
+    "Nam": [
+      {
+        "display_name": "Alex",
+        "voice_code": "es-PE-AlexNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Camila",
+        "voice_code": "es-PE-CamilaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Puerto Rico)": {
+    "Nam": [
+      {
+        "display_name": "Victor",
+        "voice_code": "es-PR-VictorNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Karina",
+        "voice_code": "es-PR-KarinaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Paraguay)": {
+    "Nam": [
+      {
+        "display_name": "Mario",
+        "voice_code": "es-PY-MarioNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Tania",
+        "voice_code": "es-PY-TaniaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (El Salvador)": {
+    "Nam": [
+      {
+        "display_name": "Rodrigo",
+        "voice_code": "es-SV-RodrigoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Lorena",
+        "voice_code": "es-SV-LorenaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Mỹ)": {
+    "Nam": [
+      {
+        "display_name": "Alonso",
+        "voice_code": "es-US-AlonsoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Paloma",
+        "voice_code": "es-US-PalomaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Uruguay)": {
+    "Nam": [
+      {
+        "display_name": "Mateo",
+        "voice_code": "es-UY-MateoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Valentina",
+        "voice_code": "es-UY-ValentinaNeural"
+      }
+    ]
+  },
+  "Tiếng Tây Ban Nha (Venezuela)": {
+    "Nam": [
+      {
+        "display_name": "Sebastian",
+        "voice_code": "es-VE-SebastianNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Paola",
+        "voice_code": "es-VE-PaolaNeural"
+      }
+    ]
+  },
+  "Tiếng Estonia (Estonia)": {
+    "Nam": [
+      {
+        "display_name": "Kert",
+        "voice_code": "et-EE-KertNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Anu",
+        "voice_code": "et-EE-AnuNeural"
+      }
+    ]
+  },
+  "Tiếng Ba Tư (Iran)": {
+    "Nam": [
+      {
+        "display_name": "Farid",
+        "voice_code": "fa-IR-FaridNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Dilara",
+        "voice_code": "fa-IR-DilaraNeural"
+      }
+    ]
+  },
+  "Tiếng Phần Lan (Phần Lan)": {
+    "Nam": [
+      {
+        "display_name": "Harri",
+        "voice_code": "fi-FI-HarriNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Noora",
+        "voice_code": "fi-FI-NooraNeural"
+      }
+    ]
+  },
+  "Tiếng Philippines (Philippines)": {
+    "Nam": [
+      {
+        "display_name": "Angelo",
+        "voice_code": "fil-PH-AngeloNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Blessica",
+        "voice_code": "fil-PH-BlessicaNeural"
+      }
+    ]
+  },
+  "Tiếng Pháp (Bỉ)": {
+    "Nam": [
+      {
+        "display_name": "Gerard",
+        "voice_code": "fr-BE-GerardNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Charline",
+        "voice_code": "fr-BE-CharlineNeural"
+      }
+    ]
+  },
+  "Tiếng Pháp (Canada)": {
+    "Nam": [
+      {
+        "display_name": "Antoine",
+        "voice_code": "fr-CA-AntoineNeural"
+      },
+      {
+        "display_name": "Jean",
+        "voice_code": "fr-CA-JeanNeural"
+      },
+      {
+        "display_name": "Thierry",
+        "voice_code": "fr-CA-ThierryNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sylvie",
+        "voice_code": "fr-CA-SylvieNeural"
+      }
+    ]
+  },
+  "Tiếng Pháp (Thụy Sĩ)": {
+    "Nam": [
+      {
+        "display_name": "Fabrice",
+        "voice_code": "fr-CH-FabriceNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Ariane",
+        "voice_code": "fr-CH-ArianeNeural"
+      }
+    ]
+  },
+  "Tiếng Pháp (Pháp)": {
+    "Nam": [
+      {
+        "display_name": "Henri",
+        "voice_code": "fr-FR-HenriNeural"
+      },
+      {
+        "display_name": "Remy (Đa Ngôn Ngữ)",
+        "voice_code": "fr-FR-RemyMultilingualNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Denise",
+        "voice_code": "fr-FR-DeniseNeural"
+      },
+      {
+        "display_name": "Eloise",
+        "voice_code": "fr-FR-EloiseNeural"
+      },
+      {
+        "display_name": "Vivienne (Đa Ngôn Ngữ)",
+        "voice_code": "fr-FR-VivienneMultilingualNeural"
+      }
+    ]
+  },
+  "Tiếng Ailen (Ireland)": {
+    "Nam": [
+      {
+        "display_name": "Colm",
+        "voice_code": "ga-IE-ColmNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Orla",
+        "voice_code": "ga-IE-OrlaNeural"
+      }
+    ]
+  },
+  "Tiếng Galicia (Tây Ban Nha)": {
+    "Nam": [
+      {
+        "display_name": "Roi",
+        "voice_code": "gl-ES-RoiNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sabela",
+        "voice_code": "gl-ES-SabelaNeural"
+      }
+    ]
+  },
+  "Tiếng Gujarat (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Niranjan",
+        "voice_code": "gu-IN-NiranjanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Dhwani",
+        "voice_code": "gu-IN-DhwaniNeural"
+      }
+    ]
+  },
+  "Tiếng Hebrew (Israel)": {
+    "Nam": [
+      {
+        "display_name": "Avri",
+        "voice_code": "he-IL-AvriNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Hila",
+        "voice_code": "he-IL-HilaNeural"
+      }
+    ]
+  },
+  "Tiếng Hindi (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Madhur",
+        "voice_code": "hi-IN-MadhurNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Swara",
+        "voice_code": "hi-IN-SwaraNeural"
+      }
+    ]
+  },
+  "Tiếng Croatia (Croatia)": {
+    "Nam": [
+      {
+        "display_name": "Srecko",
+        "voice_code": "hr-HR-SreckoNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Gabrijela",
+        "voice_code": "hr-HR-GabrijelaNeural"
+      }
+    ]
+  },
+  "Tiếng Hungary (Hungary)": {
+    "Nam": [
+      {
+        "display_name": "Tamas",
+        "voice_code": "hu-HU-TamasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Noemi",
+        "voice_code": "hu-HU-NoemiNeural"
+      }
+    ]
+  },
+  "Tiếng Indonesia (Indonesia)": {
+    "Nam": [
+      {
+        "display_name": "Ardi",
+        "voice_code": "id-ID-ArdiNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Gadis",
+        "voice_code": "id-ID-GadisNeural"
+      }
+    ]
+  },
+  "Tiếng Iceland (Iceland)": {
+    "Nam": [
+      {
+        "display_name": "Gunnar",
+        "voice_code": "is-IS-GunnarNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Gudrun",
+        "voice_code": "is-IS-GudrunNeural"
+      }
+    ]
+  },
+  "Tiếng Ý (Ý)": {
+    "Nam": [
+      {
+        "display_name": "Diego",
+        "voice_code": "it-IT-DiegoNeural"
+      },
+      {
+        "display_name": "Giuseppe (Đa Ngôn Ngữ)",
+        "voice_code": "it-IT-GiuseppeMultilingualNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Elsa",
+        "voice_code": "it-IT-ElsaNeural"
+      },
+      {
+        "display_name": "Isabella",
+        "voice_code": "it-IT-IsabellaNeural"
+      }
+    ]
+  },
+  "Tiếng Inuktitut (Canada) - Chữ Canada": {
+    "Nam": [
+      {
+        "display_name": "Taqqiq",
+        "voice_code": "iu-Cans-CA-TaqqiqNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Siqiniq",
+        "voice_code": "iu-Cans-CA-SiqiniqNeural"
+      }
+    ]
+  },
+  "Tiếng Inuktitut (Canada) - Latn": {
+    "Nam": [
+      {
+        "display_name": "Taqqiq",
+        "voice_code": "iu-Latn-CA-TaqqiqNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Siqiniq",
+        "voice_code": "iu-Latn-CA-SiqiniqNeural"
+      }
+    ]
+  },
+  "Tiếng Nhật (Nhật Bản)": {
+    "Nam": [
+      {
+        "display_name": "Keita",
+        "voice_code": "ja-JP-KeitaNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Nanami",
+        "voice_code": "ja-JP-NanamiNeural"
+      }
+    ]
+  },
+  "Tiếng Java (Indonesia)": {
+    "Nam": [
+      {
+        "display_name": "Dimas",
+        "voice_code": "jv-ID-DimasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Siti",
+        "voice_code": "jv-ID-SitiNeural"
+      }
+    ]
+  },
+  "Tiếng Georgia (Georgia)": {
+    "Nam": [
+      {
+        "display_name": "Giorgi",
+        "voice_code": "ka-GE-GiorgiNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Eka",
+        "voice_code": "ka-GE-EkaNeural"
+      }
+    ]
+  },
+  "Tiếng Kazakh (Kazakhstan)": {
+    "Nam": [
+      {
+        "display_name": "Daulet",
+        "voice_code": "kk-KZ-DauletNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Aigul",
+        "voice_code": "kk-KZ-AigulNeural"
+      }
+    ]
+  },
+  "Tiếng Khmer (Campuchia)": {
+    "Nam": [
+      {
+        "display_name": "Piseth",
+        "voice_code": "km-KH-PisethNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sreymom",
+        "voice_code": "km-KH-SreymomNeural"
+      }
+    ]
+  },
+  "Tiếng Kannada (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Gagan",
+        "voice_code": "kn-IN-GaganNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sapna",
+        "voice_code": "kn-IN-SapnaNeural"
+      }
+    ]
+  },
+  "Tiếng Hàn (Hàn Quốc)": {
+    "Nam": [
+      {
+        "display_name": "HyunsuMultilingual",
+        "voice_code": "ko-KR-HyunsuMultilingualNeural"
+      },
+      {
+        "display_name": "InJoon",
+        "voice_code": "ko-KR-InJoonNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "SunHi",
+        "voice_code": "ko-KR-SunHiNeural"
+      }
+    ]
+  },
+  "Tiếng Lào (Lào)": {
+    "Nam": [
+      {
+        "display_name": "Chanthavong",
+        "voice_code": "lo-LA-ChanthavongNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Keomany",
+        "voice_code": "lo-LA-KeomanyNeural"
+      }
+    ]
+  },
+  "Tiếng Litva (Lithuania)": {
+    "Nam": [
+      {
+        "display_name": "Leonas",
+        "voice_code": "lt-LT-LeonasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Ona",
+        "voice_code": "lt-LT-OnaNeural"
+      }
+    ]
+  },
+  "Tiếng Latvia (Latvia)": {
+    "Nam": [
+      {
+        "display_name": "Nils",
+        "voice_code": "lv-LV-NilsNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Everita",
+        "voice_code": "lv-LV-EveritaNeural"
+      }
+    ]
+  },
+  "Tiếng Macedonia (Macedonia)": {
+    "Nam": [
+      {
+        "display_name": "Aleksandar",
+        "voice_code": "mk-MK-AleksandarNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Marija",
+        "voice_code": "mk-MK-MarijaNeural"
+      }
+    ]
+  },
+  "Tiếng Malayalam (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Midhun",
+        "voice_code": "ml-IN-MidhunNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sobhana",
+        "voice_code": "ml-IN-SobhanaNeural"
+      }
+    ]
+  },
+  "Tiếng Mông Cổ (Mông Cổ)": {
+    "Nam": [
+      {
+        "display_name": "Bataa",
+        "voice_code": "mn-MN-BataaNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Yesui",
+        "voice_code": "mn-MN-YesuiNeural"
+      }
+    ]
+  },
+  "Tiếng Marathi (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Manohar",
+        "voice_code": "mr-IN-ManoharNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Aarohi",
+        "voice_code": "mr-IN-AarohiNeural"
+      }
+    ]
+  },
+  "Tiếng Mã Lai (Malaysia)": {
+    "Nam": [
+      {
+        "display_name": "Osman",
+        "voice_code": "ms-MY-OsmanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Yasmin",
+        "voice_code": "ms-MY-YasminNeural"
+      }
+    ]
+  },
+  "Tiếng Malta (Malta)": {
+    "Nam": [
+      {
+        "display_name": "Joseph",
+        "voice_code": "mt-MT-JosephNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Grace",
+        "voice_code": "mt-MT-GraceNeural"
+      }
+    ]
+  },
+  "Tiếng Myanmar (Myanmar)": {
+    "Nam": [
+      {
+        "display_name": "Thiha",
+        "voice_code": "my-MM-ThihaNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Nilar",
+        "voice_code": "my-MM-NilarNeural"
+      }
+    ]
+  },
+  "Tiếng Na Uy (Na Uy)": {
+    "Nam": [
+      {
+        "display_name": "Finn",
+        "voice_code": "nb-NO-FinnNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Pernille",
+        "voice_code": "nb-NO-PernilleNeural"
+      }
+    ]
+  },
+  "Tiếng Nepal (Nepal)": {
+    "Nam": [
+      {
+        "display_name": "Sagar",
+        "voice_code": "ne-NP-SagarNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Hemkala",
+        "voice_code": "ne-NP-HemkalaNeural"
+      }
+    ]
+  },
+  "Tiếng Hà Lan (Bỉ)": {
+    "Nam": [
+      {
+        "display_name": "Arnaud",
+        "voice_code": "nl-BE-ArnaudNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Dena",
+        "voice_code": "nl-BE-DenaNeural"
+      }
+    ]
+  },
+  "Tiếng Hà Lan (Hà Lan)": {
+    "Nam": [
+      {
+        "display_name": "Maarten",
+        "voice_code": "nl-NL-MaartenNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Colette",
+        "voice_code": "nl-NL-ColetteNeural"
+      },
+      {
+        "display_name": "Fenna",
+        "voice_code": "nl-NL-FennaNeural"
+      }
+    ]
+  },
+  "Tiếng Ba Lan (Ba Lan)": {
+    "Nam": [
+      {
+        "display_name": "Marek",
+        "voice_code": "pl-PL-MarekNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Zofia",
+        "voice_code": "pl-PL-ZofiaNeural"
+      }
+    ]
+  },
+  "Tiếng Pashto (Afghanistan)": {
+    "Nam": [
+      {
+        "display_name": "GulNawaz",
+        "voice_code": "ps-AF-GulNawazNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Latifa",
+        "voice_code": "ps-AF-LatifaNeural"
+      }
+    ]
+  },
+  "Tiếng Bồ Đào Nha (Brazil)": {
+    "Nam": [
+      {
+        "display_name": "Antonio",
+        "voice_code": "pt-BR-AntonioNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Francisca",
+        "voice_code": "pt-BR-FranciscaNeural"
+      },
+      {
+        "display_name": "ThalitaMultilingual",
+        "voice_code": "pt-BR-ThalitaMultilingualNeural"
+      }
+    ]
+  },
+  "Tiếng Bồ Đào Nha (Bồ Đào Nha)": {
+    "Nam": [
+      {
+        "display_name": "Duarte",
+        "voice_code": "pt-PT-DuarteNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Raquel",
+        "voice_code": "pt-PT-RaquelNeural"
+      }
+    ]
+  },
+  "Tiếng Romania (Romania)": {
+    "Nam": [
+      {
+        "display_name": "Emil",
+        "voice_code": "ro-RO-EmilNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Alina",
+        "voice_code": "ro-RO-AlinaNeural"
+      }
+    ]
+  },
+  "Tiếng Nga (Nga)": {
+    "Nam": [
+      {
+        "display_name": "Dmitry",
+        "voice_code": "ru-RU-DmitryNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Svetlana",
+        "voice_code": "ru-RU-SvetlanaNeural"
+      }
+    ]
+  },
+  "Tiếng Sinhala (Sri Lanka)": {
+    "Nam": [
+      {
+        "display_name": "Sameera",
+        "voice_code": "si-LK-SameeraNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Thilini",
+        "voice_code": "si-LK-ThiliniNeural"
+      }
+    ]
+  },
+  "Tiếng Slovakia (Slovakia)": {
+    "Nam": [
+      {
+        "display_name": "Lukas",
+        "voice_code": "sk-SK-LukasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Viktoria",
+        "voice_code": "sk-SK-ViktoriaNeural"
+      }
+    ]
+  },
+  "Tiếng Slovenia (Slovenia)": {
+    "Nam": [
+      {
+        "display_name": "Rok",
+        "voice_code": "sl-SI-RokNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Petra",
+        "voice_code": "sl-SI-PetraNeural"
+      }
+    ]
+  },
+  "Tiếng Somali (Somalia)": {
+    "Nam": [
+      {
+        "display_name": "Muuse",
+        "voice_code": "so-SO-MuuseNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Ubax",
+        "voice_code": "so-SO-UbaxNeural"
+      }
+    ]
+  },
+  "Tiếng Albania (Albania)": {
+    "Nam": [
+      {
+        "display_name": "Ilir",
+        "voice_code": "sq-AL-IlirNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Anila",
+        "voice_code": "sq-AL-AnilaNeural"
+      }
+    ]
+  },
+  "Tiếng Serbia (Serbia)": {
+    "Nam": [
+      {
+        "display_name": "Nicholas",
+        "voice_code": "sr-RS-NicholasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sophie",
+        "voice_code": "sr-RS-SophieNeural"
+      }
+    ]
+  },
+  "Tiếng Sunda (Indonesia)": {
+    "Nam": [
+      {
+        "display_name": "Jajang",
+        "voice_code": "su-ID-JajangNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Tuti",
+        "voice_code": "su-ID-TutiNeural"
+      }
+    ]
+  },
+  "Tiếng Thụy Điển (Thụy Điển)": {
+    "Nam": [
+      {
+        "display_name": "Mattias",
+        "voice_code": "sv-SE-MattiasNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Sofie",
+        "voice_code": "sv-SE-SofieNeural"
+      }
+    ]
+  },
+  "Tiếng Swahili (Kenya)": {
+    "Nam": [
+      {
+        "display_name": "Rafiki",
+        "voice_code": "sw-KE-RafikiNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Zuri",
+        "voice_code": "sw-KE-ZuriNeural"
+      }
+    ]
+  },
+  "Tiếng Swahili (Tanzania)": {
+    "Nam": [
+      {
+        "display_name": "Daudi",
+        "voice_code": "sw-TZ-DaudiNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Rehema",
+        "voice_code": "sw-TZ-RehemaNeural"
+      }
+    ]
+  },
+  "Tiếng Tamil (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Valluvar",
+        "voice_code": "ta-IN-ValluvarNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Pallavi",
+        "voice_code": "ta-IN-PallaviNeural"
+      }
+    ]
+  },
+  "Tiếng Tamil (Sri Lanka)": {
+    "Nam": [
+      {
+        "display_name": "Kumar",
+        "voice_code": "ta-LK-KumarNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Saranya",
+        "voice_code": "ta-LK-SaranyaNeural"
+      }
+    ]
+  },
+  "Tiếng Tamil (Malaysia)": {
+    "Nam": [
+      {
+        "display_name": "Surya",
+        "voice_code": "ta-MY-SuryaNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Kani",
+        "voice_code": "ta-MY-KaniNeural"
+      }
+    ]
+  },
+  "Tiếng Tamil (Singapore)": {
+    "Nam": [
+      {
+        "display_name": "Anbu",
+        "voice_code": "ta-SG-AnbuNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Venba",
+        "voice_code": "ta-SG-VenbaNeural"
+      }
+    ]
+  },
+  "Tiếng Telugu (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Mohan",
+        "voice_code": "te-IN-MohanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Shruti",
+        "voice_code": "te-IN-ShrutiNeural"
+      }
+    ]
+  },
+  "Tiếng Thái (Thái Lan)": {
+    "Nam": [
+      {
+        "display_name": "Niwat",
+        "voice_code": "th-TH-NiwatNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Premwadee",
+        "voice_code": "th-TH-PremwadeeNeural"
+      }
+    ]
+  },
+  "Tiếng Thổ Nhĩ Kỳ (Thổ Nhĩ Kỳ)": {
+    "Nam": [
+      {
+        "display_name": "Ahmet",
+        "voice_code": "tr-TR-AhmetNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Emel",
+        "voice_code": "tr-TR-EmelNeural"
+      }
+    ]
+  },
+  "Tiếng Ukraina (Ukraine)": {
+    "Nam": [
+      {
+        "display_name": "Ostap",
+        "voice_code": "uk-UA-OstapNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Polina",
+        "voice_code": "uk-UA-PolinaNeural"
+      }
+    ]
+  },
+  "Tiếng Urdu (Ấn Độ)": {
+    "Nam": [
+      {
+        "display_name": "Salman",
+        "voice_code": "ur-IN-SalmanNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Gul",
+        "voice_code": "ur-IN-GulNeural"
+      }
+    ]
+  },
+  "Tiếng Urdu (Pakistan)": {
+    "Nam": [
+      {
+        "display_name": "Asad",
+        "voice_code": "ur-PK-AsadNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Uzma",
+        "voice_code": "ur-PK-UzmaNeural"
+      }
+    ]
+  },
+  "Tiếng Uzbekistan (Uzbekistan)": {
+    "Nam": [
+      {
+        "display_name": "Sardor",
+        "voice_code": "uz-UZ-SardorNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Madina",
+        "voice_code": "uz-UZ-MadinaNeural"
+      }
+    ]
+  },
+  "Tiếng Việt": {
+    "Nam": [
+      {
+        "display_name": "Nam Trần",
+        "voice_code": "vi-VN-NamMinhNeural"
+      },
+      {
+      "display_name": "Minh Tuấn",
+      "voice_code": "de-DE-FlorianMultilingualNeural"
+    },
+    {
+      "display_name": "Anh Dũng",
+      "voice_code": "en-US-AndrewMultilingualNeural"
+    },
+    {
+      "display_name": "Quốc Bảo",
+      "voice_code": "fr-FR-RemyMultilingualNeural"
+    },
+    {
+      "display_name": "Trung Kiên",
+      "voice_code": "it-IT-GiuseppeMultilingualNeural"
+    },
+    {
+        "display_name": "Phương Nam",
+        "voice_code": "en-US-BrianMultilingualNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Thu Hằng",
+        "voice_code": "vi-VN-HoaiMyNeural"
+      },
+      {
+      "display_name": "Ngọc Lan",
+      "voice_code": "de-DE-SeraphinaMultilingualNeural"
+    },
+    {
+      "display_name": "Thảo Nhi",
+      "voice_code": "en-US-AvaMultilingualNeural"
+    },
+    {
+      "display_name": "Thu Hà",
+      "voice_code": "en-US-EmmaMultilingualNeural"
+    },
+    {
+      "display_name": "Phương Anh",
+      "voice_code": "fr-FR-VivienneMultilingualNeural"
+    }
+    ]
+  },
+  "Tiếng Trung (Quan Thoại - Trung Quốc)": {
+    "Nam": [
+      {
+        "display_name": "Yunjian",
+        "voice_code": "zh-CN-YunjianNeural"
+      },
+      {
+        "display_name": "Yunxi",
+        "voice_code": "zh-CN-YunxiNeural"
+      },
+      {
+        "display_name": "Yunxia",
+        "voice_code": "zh-CN-YunxiaNeural"
+      },
+      {
+        "display_name": "Yunyang",
+        "voice_code": "zh-CN-YunyangNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Xiaoxiao",
+        "voice_code": "zh-CN-XiaoxiaoNeural"
+      },
+      {
+        "display_name": "Xiaoyi",
+        "voice_code": "zh-CN-XiaoyiNeural"
+      }
+    ]
+  },
+  "Tiếng Trung (Phương ngữ Liêu Ninh)": {
+    "Nam": [],
+    "Nữ": [
+      {
+        "display_name": "Xiaobei",
+        "voice_code": "zh-CN-liaoning-XiaobeiNeural"
+      }
+    ]
+  },
+  "Tiếng Trung (Phương ngữ Thiểm Tây)": {
+    "Nam": [],
+    "Nữ": [
+      {
+        "display_name": "Xiaoni",
+        "voice_code": "zh-CN-shaanxi-XiaoniNeural"
+      }
+    ]
+  },
+  "Tiếng Trung (Hồng Kông)": {
+    "Nam": [
+      {
+        "display_name": "WanLung",
+        "voice_code": "zh-HK-WanLungNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "HiuGaai",
+        "voice_code": "zh-HK-HiuGaaiNeural"
+      },
+      {
+        "display_name": "HiuMaan",
+        "voice_code": "zh-HK-HiuMaanNeural"
+      }
+    ]
+  },
+  "Tiếng Trung (Đài Loan)": {
+    "Nam": [
+      {
+        "display_name": "YunJhe",
+        "voice_code": "zh-TW-YunJheNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "HsiaoChen",
+        "voice_code": "zh-TW-HsiaoChenNeural"
+      },
+      {
+        "display_name": "HsiaoYu",
+        "voice_code": "zh-TW-HsiaoYuNeural"
+      }
+    ]
+  },
+  "Tiếng Zulu (Nam Phi)": {
+    "Nam": [
+      {
+        "display_name": "Themba",
+        "voice_code": "zu-ZA-ThembaNeural"
+      }
+    ],
+    "Nữ": [
+      {
+        "display_name": "Thando",
+        "voice_code": "zu-ZA-ThandoNeural"
+      }
+    ]
+  }
+}
