@@ -392,8 +392,11 @@ def generate_vc(audio_filepath,target_voice_filepath,inference_cfg_rate: float,s
                     combined += pydub.AudioSegment.from_file(opath)
                 final_output_path = os.path.join(vc_pair_output_dir, f"{sanitize_filename(os.path.splitext(os.path.basename(audio_filepath))[0])}_vc_full.wav")
                 combined.export(final_output_path, format="wav")
-                yield from yield_vc_updates(log_msg=f"Voice conversion complete. File saved: {final_output_path}", file_list=[final_output_path])
-                gr.Info(f"Voice conversion complete. File saved: {final_output_path}")
+                yield from yield_vc_updates(
+                  log_msg=f"Voice conversion complete. File saved: {final_output_path}",
+                  audio_data=final_output_path,
+                  file_list=[final_output_path]
+                )
             else:
                 yield from yield_vc_updates(log_msg="Performing single Voice-to-Voice generation...")
                 wav = model_vc.generate(audio_filepath,target_voice_path=target_voice_filepath,inference_cfg_rate=inference_cfg_rate,sigma_min=sigma_min)
@@ -1574,7 +1577,7 @@ with gr.Blocks(title="ChatterboxToolkitUI", theme=gr.themes.Default()) as demo:
                             ) 
                             gr.Markdown("### Converted Audio Output")
                             # Two output components, their visibility managed by yield_vc_updates
-                            vc_audio_output = gr.Audio(label="Playback", type="numpy", visible=False)
+                            vc_audio_output = gr.Audio(label="Playback", type="filepath", visible=False)
                             vc_output_files = gr.File(label="Download Generated Audio(s)", visible=False)
 
                     # VC Button Click Event
