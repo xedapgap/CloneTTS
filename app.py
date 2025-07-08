@@ -1,6 +1,3 @@
-# gradio_vc_app.py
-
-# Standard imports
 import importlib
 import torch
 import gradio as gr
@@ -319,6 +316,10 @@ def get_project_file_absolute_path(filename, subdir_key):
     return os.path.join(_current_project_root_dir, PROJECT_SUBDIRS[subdir_key], filename)
 
 def generate_vc(audio_filepath,target_voice_filepath,inference_cfg_rate: float,sigma_min: float,batch_mode: bool,batch_parameter: str,batch_values_str: str ):
+    if not audio_filepath:
+        raise gr.Error("Không có Source Audio: hãy upload hoặc record audio bạn muốn xử lý.")
+    if not target_voice_filepath:
+        raise gr.Error("Không có Reference Voice: hãy upload hoặc record audio tham chiếu.")
     model_vc = get_vc_model()
     yield from yield_vc_updates(log_msg="Starting Voice Conversion...", log_append=False, audio_data=None, file_list=None)
     base_output_dir = ""
@@ -1463,18 +1464,26 @@ with gr.Blocks(title="ChatterboxToolkitUI", theme=gr.themes.Default()) as demo:
                                 visible=False
                             )
                             vc_create_edge_tts_btn = gr.Button("Tạo audio bằng Edge TTS", visible=False)
-                            vc_edge_tts_audio_file = gr.Audio(label="Audio tạo bởi Edge TTS", visible=False)
-                            vc_input_audio = gr.Audio(label="Source Audio", visible=True)
+                            vc_edge_tts_audio_file = gr.Audio(label="Audio tạo bởi Edge TTS", type="filepath", visible=False)
 
-                            # --- Ẩn hiện input theo lựa chọn ---
+                            gr.Markdown("### Source Audio")
+                            vc_input_audio = gr.Audio(
+                                sources=["upload", "microphone"],
+                                type="filepath",
+                                label="Upload or record the audio you want to process.",
+                                interactive=True
+                            )
+
+                            # --- Ẩn/hiện các input theo lựa chọn Edge TTS ---
                             def toggle_edge_tts_inputs(use):
                                 return (
-                                    gr.update(visible=use),
-                                    gr.update(visible=use),
-                                    gr.update(visible=use),
-                                    gr.update(visible=use),
-                                    gr.update(visible=not use)
+                                    gr.update(visible=use),   # vc_edge_tts_text
+                                    gr.update(visible=use),   # vc_edge_tts_voice
+                                    gr.update(visible=use),   # vc_create_edge_tts_btn
+                                    gr.update(visible=use),   # vc_edge_tts_audio_file
+                                    gr.update(visible=not use)  # vc_input_audio
                                 )
+
                             vc_use_edge_tts.change(
                                 fn=toggle_edge_tts_inputs,
                                 inputs=[vc_use_edge_tts],
@@ -1499,19 +1508,20 @@ with gr.Blocks(title="ChatterboxToolkitUI", theme=gr.themes.Default()) as demo:
                                 return output_path
 
                             def run_create_edge_tts_audio(text, display_voice):
-                                return asyncio.run(create_edge_tts_audio(text, display_voice))
+                                path = asyncio.run(create_edge_tts_audio(text, display_voice))
+                                return path, path
 
                             vc_create_edge_tts_btn.click(
                                 fn=run_create_edge_tts_audio,
                                 inputs=[vc_edge_tts_text, vc_edge_tts_voice],
-                                outputs=[vc_edge_tts_audio_file]
+                                outputs=[vc_edge_tts_audio_file, vc_input_audio]
                             )
-                            gr.Markdown("### Source Audio")
-                            vc_input_audio = gr.Audio(sources=["upload", "microphone"], type="filepath", label="Upload or record the audio you want to process.", interactive=True)
-                            with gr.Row(visible=False) as vc_input_audio_project_row: # Hidden by default, controls visibility of its children
-                                vc_load_input_audio_from_project_btn = gr.Button("Load Source Audio from Project") # Visible on project active
+
+                            with gr.Row(visible=False) as vc_input_audio_project_row:
+                                vc_load_input_audio_from_project_btn = gr.Button("Load Source Audio from Project")
                                 vc_input_audio_project_dropdown = gr.Dropdown(label="Select Source Audio from Project", visible=False, allow_custom_value=False)
                                 vc_input_audio_project_refresh_btn = gr.Button("Refresh", visible=False)
+
 
                             gr.Markdown("### Reference Voice (Speaker) (Max. 40s)")
                             vc_target_voice = gr.Audio(sources=["upload", "microphone"], type="filepath", label="Upload or record audio to define the target speaker's voice.", interactive=True)
@@ -2054,11 +2064,20 @@ with gr.Blocks(title="ChatterboxToolkitUI", theme=gr.themes.Default()) as demo:
                             )
                             
                             # *** IMPORTANT FIX HERE ***: Corrected outputs to match load_edit_text_content_only's extended returns
+                            # sau sửa
                             edit_text_file_dropdown.change(
                                 fn=load_edit_text_content_only, 
                                 inputs=[edit_text_file_dropdown],
-                                outputs=[edit_text_content, save_edited_text_btn, edit_text_prev_btn, edit_text_next_btn, edit_text_log, current_editable_files_state] # CORRECTED LINE
+                                outputs=[
+                                    edit_text_content,
+                                    save_edited_text_btn,
+                                    edit_text_prev_btn,
+                                    edit_text_next_btn,
+                                    edit_text_log,
+                                    current_editable_files_state
+                                ]
                             )
+
 
                             save_edited_text_btn.click(
                                 fn=save_edited_text_content,
