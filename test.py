@@ -4,84 +4,79 @@ import tempfile
 
 import pysrt
 import torch
-import soundfile as sf
 from pydub import AudioSegment
 import edge_tts
 import gradio as gr
 
 from chatterbox.vc import ChatterboxVC
 
-# Device
+# --- 1) Device & lazy-load VC model ---
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
-# Lazy load VC model
 _vc_model = None
-def get_vc():
+
+def get_vc_model():
     global _vc_model
     if _vc_model is None:
         _vc_model = ChatterboxVC.from_pretrained(DEVICE)
     return _vc_model
 
-async def synthesize_segment(text: str, outfile: str, voice: str = "en-US-AriaNeural"):
+# --- 2) Edge‑TTS helper for Vietnamese Male (NamMinh) voice ---
+async def synthesize_segment(text: str, out_path: str, voice: str = "vi-VN-NamMinhNeural"):
     """
-    Dùng edge-tts để synth một đoạn text ra WAV.
+    Use edge-tts to synthesize `text` → WAV at `out_path`.
     """
-    communicate = edge_tts.Communicate(text, voice)
-    # edge-tts tự động xuất MP3 nếu outfile.endswith(".mp3"), WAV nếu .wav
-    await communicate.save(outfile)
+    communicator = edge_tts.Communicate(text, voice)
+    await communicator.save(out_path)
 
-def synthesize_srt_to_audio(srt_path: str) -> str:
+# --- 3) Build raw TTS track from SRT ---
+def synthesize_srt_to_raw_wav(srt_path: str) -> str:
     """
-    1) Parse SRT
-    2) Với mỗi subtitle: TTS -> seg WAV -> pad/truncate -> overlay lên track silent tổng độ dài
-    3) Xuất ra raw_tts.wav
+    Parse the .srt, generate each line via Edge‑TTS,
+    pad/truncate to the subtitle's duration, and overlay on a silent track.
+    Returns the path to the combined raw WAV.
     """
     subs = pysrt.open(srt_path, encoding="utf-8")
-    # Tính tổng thời gian (ms) = max end time
     total_ms = max(sub.end.ordinal for sub in subs)
-    # Khởi tạo track silent
-    out = AudioSegment.silent(duration=total_ms)
+    track = AudioSegment.silent(duration=total_ms)
 
-    # Từng câu
-    for idx, sub in enumerate(subs):
-        text = sub.text.replace("\n", " ")
+    for sub in subs:
+        text     = sub.text.replace("\n", " ")
         start_ms = sub.start.ordinal
-        dur_ms = sub.end.ordinal - sub.start.ordinal
+        dur_ms   = sub.end.ordinal - sub.start.ordinal
 
-        # synth bằng edge-tts (async)
+        # synthesize each segment to a temp WAV
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp_path = tmp.name
-        asyncio.get_event_loop().run_until_complete(
-            synthesize_segment(text, tmp_path)
-        )
+        # use asyncio.run to create a fresh event loop
+        asyncio.run(synthesize_segment(text, tmp_path))
 
-        # load bằng pydub
         seg = AudioSegment.from_file(tmp_path, format="wav")
         os.unlink(tmp_path)
 
-        # điều chỉnh độ dài cho đúng SRT
+        # pad or truncate to exact duration
         if len(seg) < dur_ms:
             seg = seg + AudioSegment.silent(duration=(dur_ms - len(seg)))
         else:
             seg = seg[:dur_ms]
 
-        # ghi đè lên vị trí start_ms
-        out = out.overlay(seg, position=start_ms)
+        # overlay at the correct start time
+        track = track.overlay(seg, position=start_ms)
 
-    # xuất file raw TTS
     os.makedirs("outputs", exist_ok=True)
-    raw_path = os.path.join("outputs", "raw_srt_tts.wav")
-    out.export(raw_path, format="wav")
-    return raw_path
+    raw_out = os.path.join("outputs", "raw_srt_tts.wav")
+    track.export(raw_out, format="wav")
+    return raw_out
 
-def convert_to_target_voice(raw_tts_path: str, ref_path: str) -> str:
+# --- 4) Voice‑to‑Voice cloning via ChatterboxVC ---
+def clone_voice(raw_wav_path: str, ref_voice_path: str) -> str:
     """
-    Clone voice: raw_srt_tts.wav -> target voice
+    Run the VC model on the raw TTS WAV, cloning into the reference voice.
+    Returns the path to the final cloned WAV.
     """
-    vc = get_vc()
+    vc = get_vc_model()
     wav_np = vc.generate(
-        raw_tts_path,
-        target_voice_path=ref_path,
+        raw_wav_path,
+        target_voice_path=ref_voice_path,
         inference_cfg_rate=0.5,
         sigma_min=1e-6
     )
@@ -89,32 +84,42 @@ def convert_to_target_voice(raw_tts_path: str, ref_path: str) -> str:
     vc.save_wav(wav_np, out_path)
     return out_path
 
+# --- 5) Full pipeline for Gradio ---
 def full_pipeline(srt_file, reference_audio):
     """
-    1) TTS theo SRT
-    2) Clone voice
-    Trả về đường dẫn file WAV kết quả.
+    1) Build raw TTS from SRT using NamMinh voice
+    2) Clone that TTS into the reference voice
+    Returns the final audio file path.
     """
-    raw = synthesize_srt_to_audio(srt_file.name)
-    cloned = convert_to_target_voice(raw, reference_audio)
-    return cloned
+    raw_wav = synthesize_srt_to_raw_wav(srt_file.name)
+    final_wav = clone_voice(raw_wav, reference_audio)
+    return final_wav
 
-# Gradio UI
-with gr.Blocks(css=".gradio-container {max-width: 600px}") as demo:
-    gr.Markdown("## CloneTTS: SRT → Edge‑TTS → Voice‑to‑Voice")
-
+# --- 6) Gradio UI Definition ---
+with gr.Blocks(css=".gradio-container {max-width:600px;}") as demo:
+    gr.Markdown("## CloneTTS: SRT → Edge‑TTS (NamMinh) → Voice‑to‑Voice")
+    
     with gr.Row():
-        srt_input = gr.File(label="Upload Subtitle (.srt)")
-        ref_audio = gr.Audio(source="upload", type="filepath", label="Reference Voice")
+        srt_input = gr.File(
+            file_types=[".srt"],
+            label="Upload Subtitle File (.srt)"
+        )
+        ref_audio = gr.Audio(
+            type="filepath",
+            label="Reference Voice Audio (WAV/MP3)"
+        )
+    
+    convert_btn = gr.Button("Convert & Clone")
+    out_audio   = gr.Audio(
+        type="filepath",
+        label="Final Cloned Audio"
+    )
 
-    btn = gr.Button("Convert & Clone")
-    out_audio = gr.Audio(label="Final Cloned Audio", type="filepath")
-
-    btn.click(
+    convert_btn.click(
         fn=full_pipeline,
         inputs=[srt_input, ref_audio],
         outputs=out_audio
     )
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    demo.launch(share=True)
