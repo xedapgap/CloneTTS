@@ -1,126 +1,231 @@
 import os
+import sys
+import importlib
+import json
 import asyncio
-import tempfile
+from datetime import datetime
 
-import pysrt
 import torch
-from pydub import AudioSegment
-import edge_tts
 import gradio as gr
+import pydub
+import edge_tts
 
+# --- 1) Ensure local `src/` is on Python path so we can import our ChatterboxVC ---
+script_dir = os.path.dirname(os.path.abspath(__file__))
+src_path = os.path.join(script_dir, "src")
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+
+import chatterbox.vc
+importlib.reload(chatterbox.vc)
 from chatterbox.vc import ChatterboxVC
 
-# --- 1) Device & lazy-load VC model ---
+# --- 2) VC model loader ---
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 _vc_model = None
-
 def get_vc_model():
     global _vc_model
     if _vc_model is None:
+        print(f"[VC] Loading model on {DEVICE}…")
         _vc_model = ChatterboxVC.from_pretrained(DEVICE)
+        print("[VC] Model ready.")
     return _vc_model
 
-# --- 2) Edge‑TTS helper for Vietnamese Male (NamMinh) voice ---
-async def synthesize_segment(text: str, out_path: str, voice: str = "vi-VN-NamMinhNeural"):
-    """
-    Use edge-tts to synthesize `text` → MP3 at `out_path` (mp3), to avoid WAV header issues.
-    """
-    communicator = edge_tts.Communicate(text, voice)
-    # force mp3 output by .mp3 extension
-    await communicator.save(out_path)
-
-# --- 3) Build raw TTS track from SRT ---
-def synthesize_srt_to_raw_wav(srt_path: str) -> str:
-    """
-    Parse the .srt, generate each line via Edge‑TTS,
-    pad/truncate to the subtitle's duration, and overlay on a silent track.
-    Returns the path to the combined raw WAV.
-    """
-    subs = pysrt.open(srt_path, encoding="utf-8")
-    total_ms = max(sub.end.ordinal for sub in subs)
-    track = AudioSegment.silent(duration=total_ms)
-
-    for sub in subs:
-        text     = sub.text.replace("\n", " ")
-        start_ms = sub.start.ordinal
-        dur_ms   = sub.end.ordinal - sub.start.ordinal
-
-        # synthesize each segment to a temp MP3
-        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
-            tmp_mp3 = tmp.name
-        # create a fresh event loop
-        asyncio.run(synthesize_segment(text, tmp_mp3))
-
-        # load mp3 then convert segment
-        seg = AudioSegment.from_file(tmp_mp3)  # auto-detect mp3
-        os.unlink(tmp_mp3)
-
-        # pad or truncate to exact duration
-        if len(seg) < dur_ms:
-            seg = seg + AudioSegment.silent(duration=(dur_ms - len(seg)))
+# --- 3) Logging & UI‐update helper for VC tab ---
+global_log_messages_vc = []
+def yield_vc_updates(log_msg=None, audio_data=None, file_list=None, log_append=True):
+    global global_log_messages_vc
+    if log_msg is not None:
+        prefix = datetime.now().strftime("[%H:%M:%S]")
+        if log_append:
+            global_log_messages_vc.append(f"{prefix} {log_msg}")
         else:
-            seg = seg[:dur_ms]
+            global_log_messages_vc = [f"{prefix} {log_msg}"]
+    log_update = gr.update(value="\n".join(global_log_messages_vc))
+    if audio_data is not None:
+        audio_update = gr.update(value=audio_data, visible=True)
+        files_update = gr.update(visible=False)
+    elif file_list:
+        audio_update = gr.update(visible=False)
+        files_update = gr.update(value=file_list, visible=True)
+    else:
+        audio_update = gr.update(visible=False)
+        files_update = gr.update(visible=False)
+    yield log_update, audio_update, files_update
 
-        # overlay at the correct start time
-        track = track.overlay(seg, position=start_ms)
+# --- 4) Edge TTS voice loader & caller ---
+def load_edge_tts_voices(json_path="voices.json"):
+    with open(json_path, "r", encoding="utf-8") as f:
+        voices = json.load(f)
+    display_list, code_map = [], {}
+    for lang, genders in voices.items():
+        for gender, items in genders.items():
+            for v in items:
+                disp = f"{lang} - {gender} - {v['display_name']} ({v['voice_code']})"
+                display_list.append(disp)
+                code_map[disp] = v["voice_code"]
+    return display_list, code_map
 
-    os.makedirs("outputs", exist_ok=True)
-    raw_out = os.path.join("outputs", "raw_srt_tts.wav")
-    track.export(raw_out, format="wav")
-    return raw_out
+edge_choices, edge_code_map = load_edge_tts_voices()
 
-# --- 4) Voice‑to‑Voice cloning via ChatterboxVC ---
-def clone_voice(raw_wav_path: str, ref_voice_path: str) -> str:
-    """
-    Run the VC model on the raw TTS WAV, cloning into the reference voice.
-    Returns the path to the final cloned WAV.
-    """
-    vc = get_vc_model()
-    wav_np = vc.generate(
-        raw_wav_path,
-        target_voice_path=ref_voice_path,
-        inference_cfg_rate=0.5,
-        sigma_min=1e-6
-    )
-    out_path = os.path.join("outputs", "final_cloned.wav")
-    vc.save_wav(wav_np, out_path)
-    return out_path
+async def _edge_tts_async(text, disp):
+    code = edge_code_map.get(disp)
+    out = "temp_edge_tts.wav"
+    await edge_tts.Communicate(text, code).save(out)
+    return out
 
-# --- 5) Full pipeline for Gradio ---
-def full_pipeline(srt_file, reference_audio):
-    """
-    1) Build raw TTS from SRT using NamMinh voice
-    2) Clone that TTS into the reference voice
-    Returns the final audio file path.
-    """
-    raw_wav = synthesize_srt_to_raw_wav(srt_file.name)
-    final_wav = clone_voice(raw_wav, reference_audio)
-    return final_wav
+def run_edge_tts(text, disp):
+    path = asyncio.run(_edge_tts_async(text, disp))
+    return path, path
 
-# --- 6) Gradio UI Definition ---
-with gr.Blocks(css=".gradio-container {max-width:600px;}") as demo:
-    gr.Markdown("## CloneTTS: SRT → Edge‑TTS (NamMinh) → Voice‑to‑Voice")
+# --- 5) Voice Conversion function ---
+def generate_vc(
+    source_audio_path,
+    target_voice_path,
+    cfg_rate: float,
+    sigma_min: float,
+    batch_mode: bool,
+    batch_parameter: str,
+    batch_values: str
+):
+    model = get_vc_model()
+    # reset log
+    yield from yield_vc_updates(log_msg="Initializing voice conversion…", log_append=False)
     
+    # choose output dir
+    out_base = "outputs/vc"
+    date_folder = datetime.now().strftime("%Y%m%d")
+    work_dir = os.path.join(out_base, date_folder)
+    os.makedirs(work_dir, exist_ok=True)
+    
+    # helper to run one conversion
+    def run_once(src, tgt, rate, sigma):
+        wav = model.generate(src, target_voice_path=tgt, inference_cfg_rate=rate, sigma_min=sigma)
+        return wav
+
+    try:
+        if batch_mode:
+            # parse values
+            try:
+                vals = [float(v.strip()) for v in batch_values.split(",") if v.strip()]
+            except:
+                raise gr.Error("Batch values must be comma‑separated numbers.")
+            yield from yield_vc_updates(f"Batch sweep on '{batch_parameter}': {vals}")
+            outputs = []
+            for idx, v in enumerate(vals, 1):
+                r, s = cfg_rate, sigma_min
+                tag = ""
+                if batch_parameter == "Inference CFG Rate":
+                    r, tag = v, f"cfg_{v}"
+                else:
+                    s, tag = v, f"sigma_{v}"
+                yield from yield_vc_updates(f" • item {idx}/{len(vals)}: {batch_parameter}={v}")
+                wav = run_once(source_audio_path, target_voice_path, r, s)
+                fn = f"{tag}_{idx}.wav"
+                path = os.path.join(work_dir, fn)
+                model.save_wav(wav, path)
+                outputs.append(path)
+                yield from yield_vc_updates(f"Saved: {path}")
+            yield from yield_vc_updates("Batch complete.", file_list=outputs)
+        else:
+            # single mode with chunk‐splitting for >40s
+            audio = pydub.AudioSegment.from_file(source_audio_path)
+            if len(audio) > 40_000:
+                yield from yield_vc_updates("Source >40s: splitting into 40s chunks…")
+                chunks = [audio[i : i + 40_000] for i in range(0, len(audio), 40_000)]
+                paths = []
+                for i, chunk in enumerate(chunks):
+                    tmp = f"{source_audio_path}_chunk{i}.wav"
+                    chunk.export(tmp, format="wav")
+                    wav = run_once(tmp, target_voice_path, cfg_rate, sigma_min)
+                    outp = os.path.join(work_dir, f"part{i}.wav")
+                    model.save_wav(wav, outp)
+                    paths.append(outp)
+                    os.remove(tmp)
+                    yield from yield_vc_updates(f"Processed chunk {i+1}/{len(chunks)}")
+                # stitch back
+                combined = pydub.AudioSegment.empty()
+                for p in paths:
+                    combined += pydub.AudioSegment.from_file(p)
+                final = os.path.join(work_dir, "combined.wav")
+                combined.export(final, format="wav")
+                yield from yield_vc_updates("Conversion complete.", audio_data=final, file_list=[final])
+            else:
+                yield from yield_vc_updates("Performing single conversion…")
+                wav = run_once(source_audio_path, target_voice_path, cfg_rate, sigma_min)
+                outp = os.path.join(work_dir, f"output_{datetime.now().strftime('%H%M%S')}.wav")
+                model.save_wav(wav, outp)
+                yield from yield_vc_updates("Done.", audio_data=outp, file_list=[outp])
+    except Exception as e:
+        yield from yield_vc_updates(f"Error: {e}")
+        raise
+
+# --- 6) Build Gradio UI ---
+with gr.Blocks(title="Voice‑to‑Voice Conversion") as demo:
+    gr.Markdown("## 📣 Voice‑to‑Voice Conversion")
     with gr.Row():
-        srt_input = gr.File(
-            file_types=[".srt"],
-            label="Upload Subtitle File (.srt)"
-        )
-        ref_audio = gr.Audio(
-            type="filepath",
-            label="Reference Voice Audio (WAV/MP3)"
-        )
+        with gr.Column():
+            # Edge TTS toggle
+            use_edge = gr.Checkbox(label="Generate source via Edge TTS?", value=False)
+            edge_text = gr.Textbox(label="Text for Edge TTS", visible=False)
+            edge_voice = gr.Dropdown(choices=edge_choices, label="Edge TTS Voice", visible=False)
+            gen_edge_btn = gr.Button("Generate Edge TTS", visible=False)
+            edge_audio   = gr.Audio(label="Edge‑generated source", type="filepath", visible=False)
+            
+            # Manual source if not Edge
+            src_audio = gr.Audio(sources=["upload","microphone"], type="filepath", label="Upload/Record Source Audio")
+            
+            gr.Markdown("### Reference (Target) Voice")
+            tgt_audio = gr.Audio(sources=["upload","microphone"], type="filepath", label="Upload/Record Target Voice")
+            
+            gr.Markdown("### Generation Parameters")
+            cfg_slider = gr.Slider(0.0, 30.0, value=0.5, step=0.1, label="Inference CFG Rate")
+            sigma_input = gr.Number(1e-6, label="Sigma Min", minimum=1e-7, maximum=1e-5, step=1e-7)
+            
+            with gr.Accordion("Batch Sweep Options", open=False):
+                batch_chk = gr.Checkbox(label="Enable Batch Sweep", value=False)
+                batch_param = gr.Dropdown(choices=["Inference CFG Rate","Sigma Min"], label="Parameter to Vary")
+                batch_vals  = gr.Textbox(placeholder="e.g. 0.5,1.0,2.0", label="Comma‑separated values")
+            
+            run_btn = gr.Button("🚀 Convert Voice")
+        
+        with gr.Column():
+            gr.Markdown("### Conversion Log")
+            log_box = gr.Textbox(interactive=False, lines=12)
+            gr.Markdown("### Output")
+            out_audio = gr.Audio(label="Result", visible=False)
+            out_files = gr.File(label="Download Files", visible=False)
     
-    convert_btn = gr.Button("Convert & Clone")
-    out_audio   = gr.Audio(
-        type="filepath",
-        label="Final Cloned Audio"
+    # Edge TTS interactions
+    def toggle_edge(v):
+        return (
+            gr.update(visible=v),
+            gr.update(visible=v),
+            gr.update(visible=v),
+            gr.update(visible=v),
+            gr.update(visible=not v)
+        )
+    use_edge.change(
+        fn=toggle_edge,
+        inputs=[use_edge],
+        outputs=[edge_text, edge_voice, gen_edge_btn, edge_audio, src_audio]
     )
-
-    convert_btn.click(
-        fn=full_pipeline,
-        inputs=[srt_input, ref_audio],
-        outputs=out_audio
+    gen_edge_btn.click(
+        fn=run_edge_tts,
+        inputs=[edge_text, edge_voice],
+        outputs=[edge_audio, src_audio]
+    )
+    
+    # Conversion button
+    run_btn.click(
+        fn=generate_vc,
+        inputs=[
+            src_audio, tgt_audio,
+            cfg_slider, sigma_input,
+            batch_chk, batch_param, batch_vals
+        ],
+        outputs=[log_box, out_audio, out_files],
+        show_progress="minimal"
     )
 
 if __name__ == "__main__":
