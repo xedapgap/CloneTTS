@@ -130,7 +130,7 @@ def generate_vc(
 
     # thư mục đầu ra
     date_folder = datetime.now().strftime("%Y%m%d")
-    work_dir = os.path.join("outputs/vc", date_folder)
+    work_dir = os.path.join("s/vc", date_folder)
     os.makedirs(work_dir, exist_ok=True)
 
     def run_once(src, tgt, rate, sigma):
@@ -184,7 +184,7 @@ def generate_vc(
             else:
                 yield from yield_vc_updates("Đang chuyển giọng…")
                 wav = run_once(source_audio_path, target_voice_path, cfg_rate, sigma_min)
-                outp = os.path.join(work_dir, f"output_{datetime.now().strftime('%H%M%S')}.wav")
+                outp = os.path.join(work_dir, f"LyTranTTS_{datetime.now().strftime('%H%M%S')}.wav")
                 model.save_wav(wav, outp)
                 outputs.append(outp)
                 yield from yield_vc_updates("Hoàn thành.")
