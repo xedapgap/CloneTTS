@@ -11,7 +11,7 @@ import pydub
 import edge_tts
 import srt
 
-# --- 1) Ensure local `src/` is on Python path so we can import our ChatterboxVC ---
+# --- 1) Đảm bảo `src/` có trong Python path để import ChatterboxVC ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
 src_path = os.path.join(script_dir, "src")
 if src_path not in sys.path:
@@ -21,7 +21,7 @@ import chatterbox.vc
 importlib.reload(chatterbox.vc)
 from chatterbox.vc import ChatterboxVC
 
-# --- 2) VC model loader ---
+# --- 2) Khởi tạo VC model ---
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 _vc_model = None
 def get_vc_model():
@@ -32,7 +32,7 @@ def get_vc_model():
         print("[VC] Model ready.")
     return _vc_model
 
-# --- 3) Logging & UI‐update helper for VC tab ---
+# --- 3) Hàm giúp update log và UI ---
 global_log_messages_vc = []
 def yield_vc_updates(log_msg=None, audio_data=None, file_list=None, log_append=True):
     global global_log_messages_vc
@@ -54,7 +54,7 @@ def yield_vc_updates(log_msg=None, audio_data=None, file_list=None, log_append=T
         files_update = gr.update(visible=False)
     yield log_update, audio_update, files_update
 
-# --- 4) Edge TTS voice loader & caller ---
+# --- 4) Load Edge TTS voices từ JSON ---
 def load_edge_tts_voices(json_path="voices.json"):
     with open(json_path, "r", encoding="utf-8") as f:
         voices = json.load(f)
@@ -69,19 +69,27 @@ def load_edge_tts_voices(json_path="voices.json"):
 
 edge_choices, edge_code_map = load_edge_tts_voices()
 
-async def _edge_tts_async(text, disp):
+# --- 5) TTS với Edge, hỗ trợ tùy chỉnh tốc độ và âm lượng ---
+async def _edge_tts_async(text, disp, rate_pct, vol_pct):
     code = edge_code_map.get(disp)
+    rate_str = f"{rate_pct:+d}%"
+    vol_str  = f"{vol_pct:+d}%"
     out = "temp_edge_tts.wav"
-    await edge_tts.Communicate(text, code).save(out)
+    await edge_tts.Communicate(
+        text,
+        voice=code,
+        rate=rate_str,
+        volume=vol_str
+    ).save(out)
     return out
 
-def run_edge_tts(text, disp):
-    path = asyncio.run(_edge_tts_async(text, disp))
+def run_edge_tts(text, disp, rate_pct, vol_pct):
+    path = asyncio.run(_edge_tts_async(text, disp, rate_pct, vol_pct))
     return path, path
 
-# --- 5) Synthesize audio from SRT ---
-def synthesize_srt_audio(srt_path: str, disp_voice: str, work_dir: str) -> str:
-    # Parse SRT
+# --- 6) Sinh audio từ SRT ---
+def synthesize_srt_audio(srt_path: str, disp_voice: str, work_dir: str,
+                         rate_pct: int, vol_pct: int) -> str:
     with open(srt_path, "r", encoding="utf-8") as f:
         subs = list(srt.parse(f.read()))
 
@@ -93,29 +101,25 @@ def synthesize_srt_audio(srt_path: str, disp_voice: str, work_dir: str) -> str:
         end_ms   = int(sub.end.total_seconds()   * 1000)
         dur_ms   = end_ms - start_ms
 
-        # silence until start
         if start_ms > current_ms:
             combined += pydub.AudioSegment.silent(duration=start_ms - current_ms)
 
-        # TTS text
-        tmp_wav, _ = run_edge_tts(sub.content, disp_voice)
+        tmp_wav, _ = run_edge_tts(sub.content, disp_voice, rate_pct, vol_pct)
         tts_audio = pydub.AudioSegment.from_file(tmp_wav)
 
-        # crop or pad to match dur_ms
         if len(tts_audio) > dur_ms:
             tts_audio = tts_audio[:dur_ms]
-        elif len(tts_audio) < dur_ms:
+        else:
             tts_audio += pydub.AudioSegment.silent(duration=dur_ms - len(tts_audio))
 
         combined += tts_audio
         current_ms = end_ms
 
-    # Export combined
     out_path = os.path.join(work_dir, "srt_source.wav")
     combined.export(out_path, format="wav")
     return out_path
 
-# --- 6) Voice Conversion function (single/batch) ---
+# --- 7) Voice Conversion chính ---
 def generate_vc(
     source_audio_path,
     target_voice_path,
@@ -128,7 +132,6 @@ def generate_vc(
     model = get_vc_model()
     yield from yield_vc_updates(log_msg="Initializing voice conversion…", log_append=False)
 
-    # prepare output dir
     date_folder = datetime.now().strftime("%Y%m%d")
     work_dir = os.path.join("outputs/vc", date_folder)
     os.makedirs(work_dir, exist_ok=True)
@@ -191,24 +194,31 @@ def generate_vc(
         yield from yield_vc_updates(f"Error: {e}")
         raise
 
-# --- 7) Wrapper: SRT hoặc file nguồn ---
+# --- 8) Wrapper tổng hợp ---
 def run_vc_from_srt_or_file(
     use_srt: bool,
     srt_file, srt_voice,
+    edge_text, edge_voice, edge_rate, edge_vol,
     src_audio, tgt_audio,
     cfg_rate, sigma_min,
     batch_mode, batch_parameter, batch_values
 ):
     yield from yield_vc_updates(log_msg="Bắt đầu…", log_append=False)
 
-    # chuẩn bị work_dir
     date_folder = datetime.now().strftime("%Y%m%d")
     work_dir = os.path.join("outputs/vc", date_folder)
     os.makedirs(work_dir, exist_ok=True)
 
     if use_srt:
         yield from yield_vc_updates("Sinh audio từ SRT…")
-        source = synthesize_srt_audio(srt_file.name, srt_voice, work_dir)
+        source = synthesize_srt_audio(
+            srt_file.name, srt_voice, work_dir,
+            rate_pct=edge_rate, vol_pct=edge_vol
+        )
+    elif edge_text and edge_voice:
+        yield from yield_vc_updates("Sinh audio từ Edge TTS…")
+        tmp, _ = run_edge_tts(edge_text, edge_voice, edge_rate, edge_vol)
+        source = tmp
     else:
         source = src_audio
 
@@ -218,94 +228,118 @@ def run_vc_from_srt_or_file(
         batch_mode, batch_parameter, batch_values
     )
 
-# --- 8) Build Gradio UI ---
+# --- 9) Xây dựng Gradio UI ---
 with gr.Blocks(title="Voice‑to‑Voice Conversion") as demo:
     gr.Markdown("## 📣 Voice‑to‑Voice Conversion")
 
     with gr.Row():
         with gr.Column():
-            # Toggle SRT
+
+            # Chọn SRT hay không
             use_srt = gr.Checkbox(label="Use SRT để làm nguồn?", value=False)
             srt_file = gr.File(file_types=[".srt"], label="Upload file .srt", visible=False)
             srt_voice = gr.Dropdown(choices=edge_choices, label="Edge TTS Voice (SRT)", visible=False)
 
             # Edge TTS source (nếu không dùng SRT)
             use_edge = gr.Checkbox(label="Generate source via Edge TTS?", value=False)
-            edge_text = gr.Textbox(label="Text for Edge TTS", visible=False)
-            edge_voice = gr.Dropdown(choices=edge_choices, label="Edge TTS Voice", visible=False)
+            edge_text   = gr.Textbox(label="Text for Edge TTS", visible=False)
+            edge_voice  = gr.Dropdown(choices=edge_choices, label="Edge TTS Voice", visible=False)
+            edge_rate   = gr.Slider(-100, 100, value=0, step=1, label="Tốc độ (% chuẩn)", visible=False)
+            edge_vol    = gr.Slider(-100, 100, value=0, step=1, label="Âm lượng (% chuẩn)", visible=False)
             gen_edge_btn = gr.Button("Generate Edge TTS", visible=False)
             edge_audio   = gr.Audio(label="Edge‑generated source", type="filepath", visible=False)
 
-            # Manual source/audio nếu không dùng SRT và không dùng Edge
-            src_audio = gr.Audio(sources=["upload","microphone"], type="filepath", label="Upload/Record Source Audio")
+            # Manual source nếu không dùng SRT và không dùng Edge
+            src_audio = gr.Audio(sources=["upload","microphone"], type="filepath",
+                                 label="Upload/Record Source Audio")
 
             # Target voice
             gr.Markdown("### Reference (Target) Voice")
-            tgt_audio = gr.Audio(sources=["upload","microphone"], type="filepath", label="Upload/Record Target Voice")
+            tgt_audio = gr.Audio(sources=["upload","microphone"], type="filepath",
+                                 label="Upload/Record Target Voice")
 
-            # Params
+            # Tham số VC
             gr.Markdown("### Generation Parameters")
             cfg_slider = gr.Slider(0.0, 30.0, value=0.5, step=0.1, label="Inference CFG Rate")
-            sigma_input = gr.Number(1e-6, label="Sigma Min", minimum=1e-7, maximum=1e-5, step=1e-7)
+            sigma_input = gr.Number(1e-6, label="Sigma Min",
+                                   minimum=1e-7, maximum=1e-5, step=1e-7)
 
             with gr.Accordion("Batch Sweep Options", open=False):
-                batch_chk = gr.Checkbox(label="Enable Batch Sweep", value=False)
-                batch_param = gr.Dropdown(choices=["Inference CFG Rate","Sigma Min"], label="Parameter to Vary")
-                batch_vals  = gr.Textbox(placeholder="e.g. 0.5,1.0,2.0", label="Comma‑separated values")
+                batch_chk    = gr.Checkbox(label="Enable Batch Sweep", value=False)
+                batch_param  = gr.Dropdown(choices=["Inference CFG Rate","Sigma Min"],
+                                           label="Parameter to Vary")
+                batch_vals   = gr.Textbox(placeholder="e.g. 0.5,1.0,2.0",
+                                          label="Comma‑separated values")
 
+            # Nút Convert
             run_btn = gr.Button("🚀 Convert Voice")
 
         with gr.Column():
             gr.Markdown("### Conversion Log")
             log_box = gr.Textbox(interactive=False, lines=12)
             gr.Markdown("### Output")
-            out_audio = gr.Audio(label="Result", visible=False)
+            out_audio = gr.Audio(label="Result", type="filepath", visible=False)
             out_files = gr.File(label="Download Files", visible=False)
 
-    # Toggle hi/ẩn cho SRT vs Edge vs Manual
+    # Toggle hi/ẩn SRT
     def toggle_srt(v):
         return (
-            gr.update(visible=v),        # srt_file
-            gr.update(visible=v),        # srt_voice
-            gr.update(visible=not v),    # use_edge
-            gr.update(visible=not v),    # edge_text
-            gr.update(visible=not v),    # edge_voice
-            gr.update(visible=not v),    # gen_edge_btn
-            gr.update(visible=not v),    # edge_audio
-            gr.update(visible=not v)     # src_audio
+            gr.update(visible=v),  # srt_file
+            gr.update(visible=v),  # srt_voice
+            gr.update(visible=not v), # use_edge
+            gr.update(visible=not v), # edge_text
+            gr.update(visible=not v), # edge_voice
+            gr.update(visible=not v), # edge_rate
+            gr.update(visible=not v), # edge_vol
+            gr.update(visible=not v), # gen_edge_btn
+            gr.update(visible=not v), # edge_audio
+            gr.update(visible=not v)  # src_audio
         )
 
     use_srt.change(
         fn=toggle_srt,
         inputs=[use_srt],
-        outputs=[srt_file, srt_voice, use_edge, edge_text, edge_voice, gen_edge_btn, edge_audio, src_audio]
+        outputs=[
+            srt_file, srt_voice,
+            use_edge, edge_text, edge_voice, edge_rate, edge_vol,
+            gen_edge_btn, edge_audio, src_audio
+        ]
     )
 
+    # Toggle hi/ẩn Edge TTS
     def toggle_edge(v):
         return (
-            gr.update(visible=v),
-            gr.update(visible=v),
-            gr.update(visible=v),
-            gr.update(visible=v),
-            gr.update(visible=not v)
+            gr.update(visible=v),  # edge_text
+            gr.update(visible=v),  # edge_voice
+            gr.update(visible=v),  # edge_rate
+            gr.update(visible=v),  # edge_vol
+            gr.update(visible=v),  # gen_edge_btn
+            gr.update(visible=v),  # edge_audio
+            gr.update(visible=not v) # src_audio
         )
 
     use_edge.change(
         fn=toggle_edge,
         inputs=[use_edge],
-        outputs=[edge_text, edge_voice, gen_edge_btn, edge_audio, src_audio]
+        outputs=[
+            edge_text, edge_voice, edge_rate, edge_vol,
+            gen_edge_btn, edge_audio, src_audio
+        ]
     )
 
+    # Sinh Edge TTS
     gen_edge_btn.click(
         fn=run_edge_tts,
-        inputs=[edge_text, edge_voice],
+        inputs=[edge_text, edge_voice, edge_rate, edge_vol],
         outputs=[edge_audio, src_audio]
     )
 
+    # Chạy VC
     run_btn.click(
         fn=run_vc_from_srt_or_file,
         inputs=[
             use_srt, srt_file, srt_voice,
+            edge_text, edge_voice, edge_rate, edge_vol,
             src_audio, tgt_audio,
             cfg_slider, sigma_input,
             batch_chk, batch_param, batch_vals
