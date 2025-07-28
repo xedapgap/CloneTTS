@@ -32,10 +32,11 @@ def get_vc_model():
         print("[VC] Model sẵn sàng.")
     return _vc_model
 
-# --- 3) Helper cập nhật log và UI ---
+# --- 3) Helper cập nhật log, audio và file-download ---
 global_log_messages_vc = []
 def yield_vc_updates(log_msg=None, audio_data=None, file_list=None, log_append=True):
     global global_log_messages_vc
+    # cập nhật log
     if log_msg is not None:
         prefix = datetime.now().strftime("[%H:%M:%S]")
         if log_append:
@@ -43,15 +44,14 @@ def yield_vc_updates(log_msg=None, audio_data=None, file_list=None, log_append=T
         else:
             global_log_messages_vc = [f"{prefix} {log_msg}"]
     log_update = gr.update(value="\n".join(global_log_messages_vc))
-    if audio_data is not None:
-        audio_update = gr.update(value=audio_data, visible=True)
-        files_update = gr.update(visible=False)
-    elif file_list:
-        audio_update = gr.update(visible=False)
-        files_update = gr.update(value=file_list, visible=True)
-    else:
-        audio_update = gr.update(visible=False)
-        files_update = gr.update(visible=False)
+
+    # audio output
+    audio_update = gr.update(visible=(audio_data is not None),
+                             value=audio_data if audio_data is not None else None)
+    # file-download output
+    files_update = gr.update(visible=(file_list is not None),
+                             value=file_list if file_list is not None else [])
+
     yield log_update, audio_update, files_update
 
 # --- 4) Load voices Edge TTS từ voices.json ---
@@ -82,7 +82,7 @@ def run_edge_tts(text, disp, rate_pct, vol_pct):
     path = asyncio.run(_edge_tts_async(text, disp, rate_pct, vol_pct))
     return path, path
 
-# --- 6) Sinh audio từ SRT (có rate/vol) ---
+# --- 6) Sinh audio từ SRT (có rate & vol) ---
 def synthesize_srt_audio(srt_path: str, disp_voice: str, work_dir: str,
                          rate_pct: int, vol_pct: int) -> str:
     with open(srt_path, "r", encoding="utf-8") as f:
@@ -94,14 +94,20 @@ def synthesize_srt_audio(srt_path: str, disp_voice: str, work_dir: str,
         start_ms = int(sub.start.total_seconds() * 1000)
         end_ms   = int(sub.end.total_seconds()   * 1000)
         dur_ms   = end_ms - start_ms
+
+        # silence until start
         if start_ms > current_ms:
             combined += pydub.AudioSegment.silent(duration=start_ms - current_ms)
+
         tmp_wav, _ = run_edge_tts(sub.content, disp_voice, rate_pct, vol_pct)
         tts_audio = pydub.AudioSegment.from_file(tmp_wav)
+
+        # crop/pad để match dur
         if len(tts_audio) > dur_ms:
             tts_audio = tts_audio[:dur_ms]
         else:
             tts_audio += pydub.AudioSegment.silent(duration=dur_ms - len(tts_audio))
+
         combined += tts_audio
         current_ms = end_ms
 
@@ -109,7 +115,7 @@ def synthesize_srt_audio(srt_path: str, disp_voice: str, work_dir: str,
     combined.export(out_path, format="wav")
     return out_path
 
-# --- 7) Thực hiện Voice Conversion ---
+# --- 7) Voice Conversion chính ---
 def generate_vc(
     source_audio_path,
     target_voice_path,
@@ -122,6 +128,7 @@ def generate_vc(
     model = get_vc_model()
     yield from yield_vc_updates("Khởi tạo chuyển giọng…", log_append=False)
 
+    # thư mục đầu ra
     date_folder = datetime.now().strftime("%Y%m%d")
     work_dir = os.path.join("outputs/vc", date_folder)
     os.makedirs(work_dir, exist_ok=True)
@@ -129,14 +136,14 @@ def generate_vc(
     def run_once(src, tgt, rate, sigma):
         return model.generate(src, target_voice_path=tgt, inference_cfg_rate=rate, sigma_min=sigma)
 
+    outputs = []
     try:
         if batch_mode:
             try:
                 vals = [float(v.strip()) for v in batch_values.split(",") if v.strip()]
             except:
-                raise gr.Error("Batch values phải là danh sách số, phân tách bằng dấu phẩy.")
+                raise gr.Error("Batch values phải là số, phân cách bởi dấu phẩy.")
             yield from yield_vc_updates(f"Chạy batch '{batch_parameter}': {vals}")
-            outputs = []
             for idx, v in enumerate(vals, 1):
                 r, s = cfg_rate, sigma_min
                 tag = ""
@@ -151,39 +158,45 @@ def generate_vc(
                 model.save_wav(wav, path)
                 outputs.append(path)
                 yield from yield_vc_updates(f"Đã lưu: {path}")
-            yield from yield_vc_updates("Hoàn thành batch.", file_list=outputs)
         else:
             audio = pydub.AudioSegment.from_file(source_audio_path)
             if len(audio) > 40_000:
-                yield from yield_vc_updates("Audio >40s: tách thành đoạn 40s…")
+                yield from yield_vc_updates("Audio dài >40s: tách thành đoạn 40s…")
                 chunks = [audio[i:i+40_000] for i in range(0, len(audio), 40_000)]
-                paths = []
+                temp_paths = []
                 for i, chunk in enumerate(chunks):
                     tmp = f"{source_audio_path}_chunk{i}.wav"
                     chunk.export(tmp, format="wav")
                     wav = run_once(tmp, target_voice_path, cfg_rate, sigma_min)
                     outp = os.path.join(work_dir, f"part{i}.wav")
                     model.save_wav(wav, outp)
-                    paths.append(outp)
+                    temp_paths.append(outp)
                     os.remove(tmp)
                     yield from yield_vc_updates(f"Xử lý đoạn {i+1}/{len(chunks)}")
+                # ghép lại
                 combined = pydub.AudioSegment.empty()
-                for p in paths:
+                for p in temp_paths:
                     combined += pydub.AudioSegment.from_file(p)
                 final = os.path.join(work_dir, "combined.wav")
                 combined.export(final, format="wav")
-                yield from yield_vc_updates("Chuyển giọng xong.", audio_data=final, file_list=[final])
+                outputs.append(final)
+                yield from yield_vc_updates("Chuyển xong.")
             else:
                 yield from yield_vc_updates("Đang chuyển giọng…")
                 wav = run_once(source_audio_path, target_voice_path, cfg_rate, sigma_min)
                 outp = os.path.join(work_dir, f"output_{datetime.now().strftime('%H%M%S')}.wav")
                 model.save_wav(wav, outp)
-                yield from yield_vc_updates("Xong.", audio_data=outp, file_list=[outp])
+                outputs.append(outp)
+                yield from yield_vc_updates("Hoàn thành.")
     except Exception as e:
         yield from yield_vc_updates(f"Lỗi: {e}")
         raise
 
-# --- 8) Wrapper kết hợp SRT / Edge / File thủ công ---
+    # cuốn cùng: luôn trả về cả audio đầu tiên và danh sách files cho download
+    first = outputs[0] if outputs else None
+    yield from yield_vc_updates(log_msg=None, audio_data=first, file_list=outputs)
+
+# --- 8) Wrapper tổng hợp ---
 def run_vc_from_srt_or_file(
     use_srt: bool,
     srt_file, srt_voice, srt_rate, srt_vol,
@@ -217,44 +230,39 @@ def run_vc_from_srt_or_file(
         batch_mode, batch_parameter, batch_values
     )
 
-# --- 9) Build giao diện Gradio ---
-with gr.Blocks(title="Chuyển Giọng Nói bằng AI") as demo:
-    gr.Markdown("## 📣 Chuyển Giọng Nói bằng AI")
+# --- 9) Build Gradio UI ---
+with gr.Blocks(title="Chuyển Giọng Nói AI") as demo:
+    gr.Markdown("## 📣 Chuyển Giọng Nói AI")
     gr.Markdown("> Tác giả: **Lý Trần**")
 
     with gr.Row():
         with gr.Column():
-
             # SRT
             use_srt   = gr.Checkbox(label="Sử dụng file SRT làm nguồn?", value=False)
             srt_file  = gr.File(file_types=[".srt"], label="Tải lên file .srt", visible=False)
             srt_voice = gr.Dropdown(choices=edge_choices, label="Giọng Edge TTS (SRT)", visible=False)
-            srt_rate  = gr.Slider(-100, 100, value=0, step=1,
-                                  label="Tốc độ SRT (% chuẩn)", visible=False)
-            srt_vol   = gr.Slider(-100, 100, value=0, step=1,
-                                  label="Âm lượng SRT (% chuẩn)", visible=False)
+            srt_rate  = gr.Slider(-100, 100, value=0, step=1, label="Tốc độ SRT (% chuẩn)", visible=False)
+            srt_vol   = gr.Slider(-100, 100, value=0, step=1, label="Âm lượng SRT (% chuẩn)", visible=False)
 
             # Edge TTS
             use_edge   = gr.Checkbox(label="Tạo nguồn qua Edge TTS?", value=False)
             edge_text  = gr.Textbox(label="Văn bản cho Edge TTS", visible=False)
-            edge_voice = gr.Dropdown(choices=edge_choices, label="Chọn giọng Edge TTS", visible=False)
-            edge_rate  = gr.Slider(-100, 100, value=0, step=1,
-                                   label="Tốc độ Edge (% chuẩn)", visible=False)
-            edge_vol   = gr.Slider(-100, 100, value=0, step=1,
-                                   label="Âm lượng Edge (% chuẩn)", visible=False)
+            edge_voice = gr.Dropdown(choices=edge_choices, label="Giọng Edge TTS", visible=False)
+            edge_rate  = gr.Slider(-100, 100, value=0, step=1, label="Tốc độ Edge (% chuẩn)", visible=False)
+            edge_vol   = gr.Slider(-100, 100, value=0, step=1, label="Âm lượng Edge (% chuẩn)", visible=False)
             gen_edge_btn = gr.Button("🗣️ Tạo Edge TTS", visible=False)
             edge_audio   = gr.Audio(label="Nguồn Edge TTS", type="filepath", visible=False)
 
             # Nguồn thủ công
             src_audio = gr.Audio(sources=["upload","microphone"], type="filepath",
-                                 label="Tải lên/Ghi âm nguồn")
+                                 label="Tải lên / Ghi âm nguồn")
 
             # Giọng tham chiếu
             gr.Markdown("### Giọng tham chiếu (mục tiêu)")
             tgt_audio = gr.Audio(sources=["upload","microphone"], type="filepath",
-                                 label="Tải lên/Ghi âm giọng mục tiêu")
+                                 label="Tải lên / Ghi âm giọng mục tiêu")
 
-            # Tham số chuyển giọng
+            # Tham số VC
             gr.Markdown("### Tham số chuyển giọng")
             cfg_slider  = gr.Slider(0.0, 30.0, value=0.5, step=0.1, label="CFG Rate")
             sigma_input = gr.Number(1e-6, label="Sigma Min",
@@ -266,7 +274,7 @@ with gr.Blocks(title="Chuyển Giọng Nói bằng AI") as demo:
                 batch_param = gr.Dropdown(choices=["Inference CFG Rate","Sigma Min"],
                                           label="Tham số thay đổi")
                 batch_vals  = gr.Textbox(placeholder="ví dụ: 0.5,1.0,2.0",
-                                         label="Các giá trị, phân cách dấu phẩy")
+                                         label="Giá trị phân cách dấu phẩy")
 
             run_btn = gr.Button("🚀 Chuyển giọng")
 
@@ -275,7 +283,7 @@ with gr.Blocks(title="Chuyển Giọng Nói bằng AI") as demo:
             log_box = gr.Textbox(interactive=False, lines=12)
             gr.Markdown("### Kết quả")
             out_audio = gr.Audio(label="Âm thanh kết quả", type="filepath", visible=False)
-            out_files = gr.Files(label="Tải xuống file âm thanh", visible=False)
+            out_files = gr.Files(label="Tải xuống file đầu ra", visible=False)
 
     # Toggle SRT
     def toggle_srt(v):
