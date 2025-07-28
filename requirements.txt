@@ -11,3 +11,5 @@ scipy
 webrtcvad
 nltk
 edge_tts
+pysrt
+soundfile
