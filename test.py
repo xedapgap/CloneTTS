@@ -23,9 +23,10 @@ def get_vc_model():
 # --- 2) Edge‑TTS helper for Vietnamese Male (NamMinh) voice ---
 async def synthesize_segment(text: str, out_path: str, voice: str = "vi-VN-NamMinhNeural"):
     """
-    Use edge-tts to synthesize `text` → WAV at `out_path`.
+    Use edge-tts to synthesize `text` → MP3 at `out_path` (mp3), to avoid WAV header issues.
     """
     communicator = edge_tts.Communicate(text, voice)
+    # force mp3 output by .mp3 extension
     await communicator.save(out_path)
 
 # --- 3) Build raw TTS track from SRT ---
@@ -44,14 +45,15 @@ def synthesize_srt_to_raw_wav(srt_path: str) -> str:
         start_ms = sub.start.ordinal
         dur_ms   = sub.end.ordinal - sub.start.ordinal
 
-        # synthesize each segment to a temp WAV
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-            tmp_path = tmp.name
-        # use asyncio.run to create a fresh event loop
-        asyncio.run(synthesize_segment(text, tmp_path))
+        # synthesize each segment to a temp MP3
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+            tmp_mp3 = tmp.name
+        # create a fresh event loop
+        asyncio.run(synthesize_segment(text, tmp_mp3))
 
-        seg = AudioSegment.from_file(tmp_path, format="wav")
-        os.unlink(tmp_path)
+        # load mp3 then convert segment
+        seg = AudioSegment.from_file(tmp_mp3)  # auto-detect mp3
+        os.unlink(tmp_mp3)
 
         # pad or truncate to exact duration
         if len(seg) < dur_ms:
