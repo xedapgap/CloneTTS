@@ -1,6 +1,7 @@
 # CloneTTS - Sao Chép Giọng Đọc Đa Ngôn Ngữ 🎙️🧠
 
 **Tác giả:** Lý Trần
+**🚀 Chạy thử trên Colab:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([https://colab.research.google.com/drive/1nmdU6vTKRBnjRxHDKudFxdCGbIB4Q3RM?usp=sharing](https://colab.research.google.com/drive/1ttXQ5GuMYm4ZPMrWNLFarm56efz8wDGt))
 
 CloneTTS Giọng Đa Ngôn Ngữ là một ứng dụng web sử dụng Gradio, cung cấp giao diện thân thiện để tạo giọng nói, chuyển đổi giọng nói, và quản lý quy trình xử lý âm thanh nâng cao dựa trên mô hình Chatterbox của Resemble AI.
 
