@@ -2,11 +2,7 @@ chatterbox-tts
 
 # Users with Nvidia 10 series or AMD GPUs need to preinstall their proper torch 2.6.0 version manually and can remove the below 2 lines. 
 
---extra-index-url https://download.pytorch.org/whl/cu118
-torch==2.5.1
-torchvision==0.20.1
-torchaudio==2.5.1
-numpy==2.1.2
+--extra-index-url https://download.pytorch.org/whl/cu121
 gradio==5.31.0
 pydub
 scipy
