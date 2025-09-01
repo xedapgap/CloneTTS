@@ -6,7 +6,7 @@ chatterbox-tts
 torch==2.5.1
 torchvision==0.20.1
 torchaudio==2.5.1
-numpy=2.1.2
+numpy==2.1.2
 gradio==5.31.0
 pydub
 scipy
