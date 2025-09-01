@@ -5,7 +5,7 @@ chatterbox-tts
 --extra-index-url https://download.pytorch.org/whl/cu118
 torch==2.5.1
 torchvision==0.20.1
-torchaudio==2.2.0
+torchaudio==2.5.1
 numpy-2.1.2
 gradio==5.31.0
 pydub
