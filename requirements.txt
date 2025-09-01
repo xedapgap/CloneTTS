@@ -1,13 +1,12 @@
-chatterbox-tts
-
-# Users with Nvidia 10 series or AMD GPUs need to preinstall their proper torch 2.6.0 version manually and can remove the below 2 lines. 
-
+cat > requirements.txt <<'EOF'
 --extra-index-url https://download.pytorch.org/whl/cu121
+
+edge_tts==6.1.9
 gradio==5.31.0
-pydub
-scipy
-webrtcvad
-nltk
-edge_tts
-pysrt
-soundfile
+nltk==3.9.1
+pydub==0.25.1
+pysrt==1.1.2
+scipy==1.14.1
+soundfile==0.12.1
+webrtcvad==2.0.10
+EOF
