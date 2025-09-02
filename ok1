@@ -1,0 +1,174 @@
+# -*- coding: utf-8 -*-
+"""
+Tối ưu hóa mã chuyển đổi file SRT thành một file audio duy nhất.
+Các cải tiến:
+- Xử lý hoàn toàn trong bộ nhớ, không tạo file tạm để tăng tốc độ.
+- Thêm thanh tiến trình để dễ theo dõi.
+- Cải thiện độ ổn định với try-except.
+- Đảm bảo sample rate nhất quán.
+- Logic ghép audio ổn định hơn và thêm kiểm tra file rỗng.
+- SỬA LỖI: Khắc phục vấn đề đọc thiếu chữ bằng cách không cắt âm thanh.
+"""
+
+# Cài đặt các thư viện cần thiết nếu chưa có
+try:
+    import gtts
+    import pysrt
+    import librosa
+    import soundfile as sf
+    import numpy as np
+    from pydub import AudioSegment
+    from tqdm.auto import tqdm
+    import io
+    from IPython.display import Audio, display
+except ImportError:
+    print("Đang cài đặt các thư viện cần thiết...")
+    # Lệnh này dùng cho môi trường Colab/Jupyter
+    !pip install gtts pysrt librosa soundfile pydub tqdm ipython
+    import gtts
+    import pysrt
+    import librosa
+    import soundfile as sf
+    import numpy as np
+    from pydub import AudioSegment
+    from tqdm.auto import tqdm
+    import io
+    from IPython.display import Audio, display
+
+# Tần số lấy mẫu (sample rate) mục tiêu cho file audio cuối cùng.
+# 24000 Hz là một lựa chọn tốt cho giọng nói từ gTTS.
+TARGET_SR = 24000
+
+def ms_from_srt_time(srt_time):
+    """Chuyển đổi đối tượng thời gian của pysrt sang milliseconds."""
+    return (srt_time.hours * 3600 + srt_time.minutes * 60 + srt_time.seconds) * 1000 + srt_time.milliseconds
+
+def force_match_timeline(audio_data, target_ms, min_rate=0.7, max_rate=1.4):
+    """
+    Điều chỉnh độ dài của dữ liệu audio (dạng numpy array) để khớp với timeline.
+    PHIÊN BẢN SỬA LỖI: Không cắt bớt âm thanh nếu sau khi tăng tốc vẫn dài hơn timeline,
+    để đảm bảo không bị thiếu chữ.
+    
+    Args:
+        audio_data (np.ndarray): Dữ liệu audio mono.
+        target_ms (float): Thời lượng mục tiêu tính bằng mili giây.
+        min_rate (float): Tỷ lệ co dãn chậm nhất cho phép.
+        max_rate (float): Tỷ lệ co dãn nhanh nhất cho phép.
+
+    Returns:
+        np.ndarray: Dữ liệu audio đã được co dãn.
+    """
+    orig_ms = len(audio_data) / TARGET_SR * 1000
+
+    if orig_ms == 0 or target_ms <= 0:
+        return np.array([]) # Trả về array rỗng nếu không có gì để xử lý
+
+    # Tính toán tỷ lệ co dãn cần thiết
+    rate = orig_ms / target_ms
+    # Giới hạn tỷ lệ trong khoảng cho phép để âm thanh không bị méo quá nhiều
+    rate = max(min_rate, min(max_rate, rate))
+
+    # Sử dụng time_stretch của librosa để thay đổi tốc độ mà không ảnh hưởng đến cao độ
+    y_stretch = librosa.effects.time_stretch(y=audio_data, rate=rate)
+
+    # **SỬA LỖI**: Bỏ bước cắt âm thanh `fix_length` để tránh mất chữ.
+    # Âm thanh sẽ được giữ nguyên độ dài sau khi co dãn, dù có thể dài hơn target_ms.
+    return y_stretch
+
+def srt_to_full_audio(srt_file, output_file="output_full.wav", lang="vi"):
+    """
+    Đọc file SRT, tạo TTS cho mỗi dòng, điều chỉnh timeline và ghép thành một file audio hoàn chỉnh.
+    Phiên bản này được tối ưu để xử lý trong bộ nhớ và có logic ghép ổn định hơn.
+    """
+    try:
+        # Thêm encoding='utf-8' để đọc file tiếng Việt tốt hơn
+        subs = pysrt.open(srt_file, encoding='utf-8')
+        if not subs:
+            print(f"Cảnh báo: File SRT '{srt_file}' rỗng hoặc không chứa phụ đề hợp lệ.")
+            return
+    except Exception as e:
+        print(f"Lỗi: Không thể đọc file SRT tại '{srt_file}'. Hãy kiểm tra lại đường dẫn và định dạng file. Chi tiết: {e}")
+        return
+
+    # Xác định tổng thời lượng của audio từ timestamp cuối cùng trong file SRT
+    total_duration_ms = ms_from_srt_time(subs[-1].end)
+    print(f"Tổng thời lượng audio dự kiến: {total_duration_ms / 1000:.2f} giây.")
+
+    # Tạo một track audio im lặng với tổng thời lượng đã xác định
+    final_audio = AudioSegment.silent(duration=total_duration_ms, frame_rate=TARGET_SR)
+
+    # Sử dụng tqdm để tạo thanh tiến trình
+    for sub in tqdm(subs, desc="Đang xử lý phụ đề"):
+        start_ms = ms_from_srt_time(sub.start)
+        end_ms = ms_from_srt_time(sub.end)
+        timeline_ms = end_ms - start_ms
+
+        text_to_read = sub.text.strip()
+
+        if timeline_ms <= 0 or not text_to_read:
+            # Bỏ qua nếu dòng phụ đề không có thời lượng hoặc không có chữ
+            continue
+            
+        # --- Bước 1: Tạo âm thanh TTS và lưu vào bộ nhớ (dưới dạng bytes) ---
+        mp3_fp = io.BytesIO()
+        try:
+            tts = gtts.gTTS(text=text_to_read, lang=lang)
+            tts.write_to_fp(mp3_fp)
+            mp3_fp.seek(0)
+        except Exception as e:
+            print(f"\nCảnh báo: Không thể tạo TTS cho dòng: '{text_to_read}'. Lỗi: {e}")
+            continue
+
+        # --- Bước 2: Đọc dữ liệu audio và điều chỉnh timeline ---
+        y, sr = librosa.load(mp3_fp, sr=TARGET_SR, mono=True)
+        y_adjusted = force_match_timeline(y, timeline_ms)
+        
+        # Nếu sau khi điều chỉnh không còn audio thì bỏ qua
+        if y_adjusted.size == 0:
+            continue
+
+        # --- Bước 3: Chuyển đổi numpy array thành AudioSegment của pydub ---
+        y_int16 = (y_adjusted * 32767).astype(np.int16)
+        segment_audio = AudioSegment(
+            y_int16.tobytes(),
+            frame_rate=TARGET_SR,
+            sample_width=y_int16.dtype.itemsize,
+            channels=1
+        )
+
+        # --- Bước 4: Ghép (ghi đè) đoạn audio đã xử lý vào track chính ---
+        final_audio = final_audio.overlay(segment_audio, position=start_ms)
+
+    # Kiểm tra xem audio có bị im lặng hoàn toàn không
+    if final_audio.dBFS == -float('inf'):
+        print("\nCảnh báo: File audio đầu ra có thể bị im lặng. Vui lòng kiểm tra lại file SRT và kết nối mạng.")
+    
+    # Xuất file audio cuối cùng
+    try:
+        print(f"Đang xuất file ra '{output_file}'...")
+        final_audio.export(output_file, format=output_file.split('.')[-1])
+        print(f"\n✅ Hoàn tất! Xuất file âm thanh tại: {output_file}")
+    except Exception as e:
+        print(f"\nLỗi: Không thể xuất file audio. Chi tiết: {e}")
+
+
+# --- CÁCH SỬ DỤNG ---
+# 1. Upload file SRT của bạn lên Colab (ví dụ: "my_subtitles.srt").
+# 2. Thay đổi các biến dưới đây cho phù hợp.
+# 3. Chạy cell này để tạo file.
+
+srt_file_path = "/example_split_1.srt" 
+output_audio_path = "audio_from_subs.mp3"
+srt_to_full_audio(srt_file_path, output_audio_path, lang="vi")
+
+# --- ĐỂ NGHE THỬ TRONG COLAB/JUPYTER ---
+# Sau khi chạy hàm trên, bạn có thể chạy cell này để nghe thử file audio đã tạo.
+# try:
+#   print(f"Đang phát file: {output_audio_path}")
+#   display(Audio(output_audio_path, autoplay=False))
+# except NameError:
+#   print("Lỗi: Biến 'output_audio_path' chưa được định nghĩa.")
+#   print("Vui lòng bỏ comment và chạy phần 'CÁCH SỬ DỤNG' ở trên trước.")
+# except Exception as e:
+#   print(f"Không thể phát audio. Lỗi: {e}")
+
