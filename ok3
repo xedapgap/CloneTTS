@@ -1,0 +1,286 @@
+# -*- coding: utf-8 -*-
+"""
+Phiên bản TỐI ƯU THÔNG MINH:
+- Khi cần tăng tốc, ưu tiên rút ngắn các khoảng lặng trong câu nói trước.
+- Chỉ tăng tốc độ của lời nói khi việc rút ngắn khoảng lặng là không đủ.
+- Giữ lại một khoảng lặng tối thiểu để giọng đọc nghe tự nhiên.
+- Logic làm chậm khi audio quá ngắn vẫn được giữ nguyên.
+"""
+
+import asyncio
+import srt
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
+import edge_tts
+import io
+from tqdm.asyncio import tqdm
+
+# --- Bước 1: Cài đặt các thư viện cần thiết ---
+# pip install srt pydub edge-tts "tqdm>=4.62.0"
+
+# --- Các tham số mặc định ---
+VOICE = "vi-VN-NamMinhNeural"
+# Âm lượng dưới mức này được coi là im lặng (dBFS)
+DEFAULT_SILENCE_THRESH = -40
+# Khoảng lặng ngắn hơn mức này (ms) sẽ được bỏ qua
+DEFAULT_MIN_SILENCE_LEN = 400
+# Khoảng lặng tối thiểu được giữ lại giữa các từ sau khi tối ưu (ms)
+MIN_PAUSE_AFTER_TRIM = 150
+
+async def generate_tts_segment_in_memory(text: str, voice: str) -> AudioSegment:
+    """Tạo audio từ text và trả về đối tượng AudioSegment trong bộ nhớ."""
+    communicate = edge_tts.Communicate(text, voice)
+    audio_buffer = io.BytesIO()
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_buffer.write(chunk["data"])
+    audio_buffer.seek(0)
+    return AudioSegment.from_file(audio_buffer, format="mp3")
+
+def optimize_segment_speed(
+    segment: AudioSegment, 
+    timeline_duration_ms: int, 
+    min_speed: float, 
+    max_speed: float,
+    silence_thresh: int,
+    min_silence_len: int
+) -> AudioSegment:
+    """
+    Hàm tối ưu tốc độ thông minh cho một đoạn audio.
+    """
+    current_duration_ms = len(segment)
+
+    # Trường hợp 1: Audio quá ngắn -> Làm chậm lại để khớp timeline
+    if current_duration_ms < timeline_duration_ms:
+        speed_factor = current_duration_ms / timeline_duration_ms
+        clamped_speed = max(min_speed, speed_factor)
+        return segment.speedup(playback_speed=clamped_speed)
+
+    # Trường hợp 2: Audio quá dài -> Ưu tiên rút ngắn khoảng lặng
+    elif current_duration_ms > timeline_duration_ms:
+        time_to_cut_ms = current_duration_ms - timeline_duration_ms
+
+        # Tách audio thành các phần có lời nói, dựa vào khoảng lặng
+        speech_chunks = split_on_silence(
+            segment,
+            min_silence_len=min_silence_len,
+            silence_thresh=silence_thresh,
+            keep_silence=0 # Không giữ lại khoảng lặng gốc
+        )
+
+        # Nếu không tìm thấy khoảng lặng, chỉ còn cách tăng tốc toàn bộ
+        if len(speech_chunks) <= 1:
+            speed_factor = current_duration_ms / timeline_duration_ms
+            clamped_speed = min(max_speed, speed_factor)
+            return segment.speedup(playback_speed=clamped_speed)
+
+        # Tính tổng thời gian im lặng có thể cắt bỏ
+        total_speech_duration = sum(len(chunk) for chunk in speech_chunks)
+        total_silence_duration = current_duration_ms - total_speech_duration
+        
+        # Giữ lại một chút im lặng tối thiểu giữa các đoạn nói
+        silence_to_keep = MIN_PAUSE_AFTER_TRIM * (len(speech_chunks) - 1)
+        max_silence_can_cut = total_silence_duration - silence_to_keep
+
+        # Nếu có thể cắt đủ từ khoảng lặng
+        if max_silence_can_cut >= time_to_cut_ms:
+            # Rút ngắn đều các khoảng lặng và ghép lại
+            silence_duration_after_cut = total_silence_duration - time_to_cut_ms
+            pause_between_chunks = silence_duration_after_cut / (len(speech_chunks) - 1)
+            
+            final_segment = speech_chunks[0]
+            for chunk in speech_chunks[1:]:
+                final_segment += AudioSegment.silent(duration=pause_between_chunks) + chunk
+            return final_segment
+        else:
+            # Cắt hết khoảng lặng có thể và sau đó tăng tốc phần lời nói
+            # 1. Ghép lại với khoảng lặng tối thiểu
+            trimmed_segment = speech_chunks[0]
+            for chunk in speech_chunks[1:]:
+                trimmed_segment += AudioSegment.silent(duration=MIN_PAUSE_AFTER_TRIM) + chunk
+            
+            # 2. Tăng tốc phần còn lại
+            duration_after_trim = len(trimmed_segment)
+            if duration_after_trim > timeline_duration_ms:
+                speed_factor = duration_after_trim / timeline_duration_ms
+                clamped_speed = min(max_speed, speed_factor)
+                return trimmed_segment.speedup(playback_speed=clamped_speed)
+            return trimmed_segment
+            
+    # Trường hợp 3: Audio đã khớp -> Trả về nguyên bản
+    return segment
+
+
+async def srt_to_audio_timeline_async(
+    srt_path: str, voice: str, min_speed: float, max_speed: float,
+    silence_thresh: int, min_silence_len: int
+) -> AudioSegment:
+    """Hàm chính để chuyển đổi SRT sang Audio."""
+    try:
+        with open(srt_path, "r", encoding="utf-8") as f:
+            subs = list(srt.parse(f.read()))
+    except FileNotFoundError:
+        print(f"Lỗi: Không tìm thấy file '{srt_path}'")
+        return None
+    
+    if not subs: return AudioSegment.silent(duration=0)
+
+    total_duration_ms = int(subs[-1].end.total_seconds() * 1000)
+    final_audio = AudioSegment.silent(duration=total_duration_ms)
+    print(f"Tổng thời lượng audio dự kiến: {total_duration_ms / 1000:.2f} giây.")
+
+    print("Đang tạo giọng nói cho các phụ đề...")
+    tasks = [generate_tts_segment_in_memory(sub.content.strip().replace('\n', ' '), voice) for sub in subs]
+    audio_segments = await tqdm.gather(*tasks, desc="Đang tạo TTS")
+
+    print("Đang tối ưu thông minh và ghép audio theo timeline...")
+    for i, sub in enumerate(tqdm(subs, desc="Đang tối ưu audio")):
+        segment = audio_segments[i]
+        start_ms = int(sub.start.total_seconds() * 1000)
+        timeline_duration_ms = int(sub.end.total_seconds() * 1000) - start_ms
+
+        if timeline_duration_ms <= 0: continue
+
+        optimized_segment = optimize_segment_speed(
+            segment, timeline_duration_ms, min_speed, max_speed,
+            silence_thresh, min_silence_len
+        )
+        
+        final_audio = final_audio.overlay(optimized_segment, position=start_ms)
+        
+    return final_audio
+
+def process_srt_file(
+    srt_path: str, out_path: str, voice: str = VOICE, min_speed: float = 0.75,
+    max_speed: float = 2.0, silence_dbfs: int = DEFAULT_SILENCE_THRESH,
+    min_silence_len_ms: int = DEFAULT_MIN_SILENCE_LEN
+):
+    """Hàm bao bọc để chạy toàn bộ quá trình."""
+    print("Bắt đầu quá trình chuyển đổi...")
+    try:
+        combined_audio = asyncio.run(srt_to_audio_timeline_async(
+            srt_path, voice, min_speed, max_speed, silence_dbfs, min_silence_len_ms
+        ))
+        if combined_audio is not None:
+            combined_audio.export(out_path, format="wav")
+            print(f"✅ Hoàn tất! Audio đã được xuất ra tại: {out_path}")
+    except Exception as e:
+        print(f"Đã xảy ra lỗi trong quá trình xử lý: {e}")
+
+# --- Ví dụ sử dụng ---
+if __name__ == "__main__":
+    srt_content = """1
+00:00:03,133 --> 00:00:04,366
+Tom lao thẳng lên trời
+
+2
+00:00:04,366 --> 00:00:06,300
+Ngoảnh đầu nhìn lại thì thấy trạm không gian
+
+3
+00:00:06,300 --> 00:00:08,300
+Còn có một phi hành gia cũng đeo túi
+
+4
+00:00:08,300 --> 00:00:09,300
+Chào hỏi Tom
+
+5
+00:00:09,300 --> 00:00:10,400
+Tom lịch sự đáp lại
+
+6
+00:00:10,400 --> 00:00:12,366
+Nhưng ống nước của anh đã đạt tới giới hạn
+
+7
+00:00:12,366 --> 00:00:14,366
+Tom bất cẩn nhất thời quên đi nguy hiểm
+
+8
+00:00:15,400 --> 00:00:16,766
+Anh nhìn khẩu súng nước trong tay
+
+9
+00:00:16,766 --> 00:00:18,366
+Liền dứt khoát tắt công tắc
+
+10
+00:00:18,366 --> 00:00:20,766
+Không ngờ trong chốc lát đã tích tụ một lượng lớn nước
+
+11
+00:00:20,766 --> 00:00:22,433
+Cuối cùng trực tiếp không giữ nổi nữa
+
+12
+00:00:22,933 --> 00:00:24,333
+Tom rơi xuống từ độ cao
+
+13
+00:00:24,333 --> 00:00:26,400
+Jerry còn tốt bụng ném xuống một cái phao cứu sinh
+
+14
+00:00:26,400 --> 00:00:28,166
+Và Tom đang rơi nhanh nhìn thấy
+
+15
+00:00:28,166 --> 00:00:29,666
+Cảm thấy nguy hiểm đã được giải trừ
+
+16
+00:00:29,666 --> 00:00:31,766
+Nhưng Jerry lúc này lại huýt sáo
+
+17
+00:00:31,766 --> 00:00:33,966
+Dưới phao cứu sinh nhanh chóng nhô lên một con cá mập lớn
+
+18
+00:00:33,966 --> 00:00:35,966
+Thấy vậy, nó há cái miệng rộng như chậu máu
+
+19
+00:00:35,966 --> 00:00:37,166
+Cá mập vừa mới ăn no
+
+20
+00:00:37,166 --> 00:00:39,000
+Thế mà không ngờ Tom lại bay ra ngoài
+
+21
+00:00:39,000 --> 00:00:40,700
+Sau đó rơi vào trong ống khói
+
+22
+00:00:40,700 --> 00:00:41,866
+Hai giây rưỡi sau
+"""
+    srt_file = "/content/example_split_1.srt"
+    #with open(srt_file, "w", encoding="utf-8") as f:
+       # f.write(srt_content)
+    
+    # --- BẠN CÓ THỂ TINH CHỈNH CÁC THAM SỐ TẠI ĐÂY ---
+    output_file = "smart_optimized_output.wav"
+    
+    # Tùy chỉnh tốc độ
+    MINIMUM_SPEED = 0.75 
+    MAXIMUM_SPEED = 1.25
+    
+    # Tùy chỉnh phát hiện khoảng lặng
+    # Âm lượng càng nhỏ (vd: -50) thì càng nhạy, phát hiện được nhiều khoảng lặng hơn.
+    SILENCE_DBFS = -30
+    # Các khoảng lặng ngắn hơn 400ms sẽ không bị coi là "pause" để cắt.
+    MIN_SILENCE_LEN_MS = 700
+    
+    # Chạy hàm chuyển đổi
+    process_srt_file(
+        srt_file, 
+        out_path=output_file, 
+        voice=VOICE,
+        min_speed=MINIMUM_SPEED,
+        max_speed=MAXIMUM_SPEED,
+        silence_dbfs=SILENCE_DBFS,
+        min_silence_len_ms=MIN_SILENCE_LEN_MS
+    )
