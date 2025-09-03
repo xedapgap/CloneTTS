@@ -1,0 +1,246 @@
+# -*- coding: utf-8 -*-
+"""
+Phiên bản TỐI ƯU SIÊU CẤP v2 - TĂNG CƯỜNG TÍNH ỔN ĐỊNH
+Cải tiến dựa trên phiên bản trước, tập trung vào việc xử lý lỗi và tăng độ tin cậy.
+
+Điểm cải tiến chính:
+1.  **Cơ chế Tự động Thử lại (Retry):** Tích hợp logic tự động thử lại khi gọi API TTS thất bại,
+    giúp chương trình vượt qua các lỗi mạng hoặc dịch vụ quá tải tạm thời.
+2.  **Xử lý lỗi thông minh:** Nếu một dòng phụ đề bị lỗi không thể tạo audio sau nhiều lần thử,
+    chương trình sẽ ghi nhận lỗi, thay thế bằng khoảng lặng và tiếp tục xử lý phần còn lại,
+    thay vì bị dừng đột ngột.
+3.  **Giữ nguyên các tính năng tối ưu:** Toàn bộ logic về "Vùng Tốc Độ Thoải Mái", xử lý
+    khoảng lặng thông minh và nghe trực tiếp vẫn được giữ nguyên.
+"""
+import asyncio
+import srt
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
+import edge_tts
+import io
+from tqdm.asyncio import tqdm
+import math
+from IPython.display import Audio, display
+
+# --- BƯỚC 1: CÀI ĐẶT THƯ VIỆN (CHẠY TRONG 1 CELL RIÊNG TRÊN COLAB) ---
+# !pip install srt pydub edge-tts "tqdm>=4.62.0" ipython
+
+# --- BƯỚC 2: KHU VỰC TÙY CHỈNH CHÍNH ---
+CONFIG = {
+    # --- Cấu hình giọng nói ---
+    "VOICE": "vi-VN-NamMinhNeural",
+
+    # --- Cấu hình độ ổn định ---
+    "TTS_RETRIES": 3, # <-- THÊM MỚI: Số lần thử lại nếu gọi API TTS thất bại
+
+    # --- Vùng tốc độ thoải mái (quan trọng nhất) ---
+    "COMFORT_SPEED_MIN": 0.9,
+    "COMFORT_SPEED_MAX": 1.15,
+
+    # --- Giới hạn tốc độ an toàn ---
+    "MIN_SPEED_LIMIT": 0.75,
+    "MAX_SPEED_LIMIT": 1.25,
+
+    # --- Cấu hình xử lý khoảng lặng ---
+    "SILENCE_THRESH_DBFS": -40,
+    "MIN_SILENCE_LEN_MS": 350,
+    "MIN_PAUSE_AFTER_TRIM_MS": 200,
+
+    # --- Cấu hình ghép nối ---
+    "CROSSFADE_DURATION_MS": 15,
+}
+
+async def generate_tts_segment_in_memory(text: str, voice: str, retries: int) -> AudioSegment:
+    """
+    Tạo audio từ text, trả về AudioSegment trong bộ nhớ.
+    Tích hợp sẵn cơ chế thử lại (retry) để tăng tính ổn định.
+    """
+    if not text.strip():
+        return AudioSegment.silent(duration=0)
+
+    for attempt in range(retries):
+        try:
+            communicate = edge_tts.Communicate(text, voice)
+            audio_buffer = io.BytesIO()
+            audio_received = False
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_buffer.write(chunk["data"])
+                    audio_received = True
+
+            if not audio_received:
+                raise edge_tts.exceptions.NoAudioReceived("Không nhận được dữ liệu audio từ máy chủ.")
+
+            audio_buffer.seek(0)
+            return AudioSegment.from_file(audio_buffer, format="mp3")
+
+        except edge_tts.exceptions.NoAudioReceived as e:
+            if attempt < retries - 1:
+                print(f"⚠️ Lỗi NoAudioReceived (lần {attempt + 1}/{retries}) cho text: '{text[:50]}...'. Đang thử lại sau 1s...")
+                await asyncio.sleep(1)
+            else:
+                print(f"❌ LỖI: Không thể tạo audio cho text '{text[:50]}...' sau {retries} lần thử. Lỗi: {e}")
+                return AudioSegment.silent(duration=0)
+
+        except Exception as e:
+            if attempt < retries - 1:
+                print(f"⚠️ Lỗi không xác định (lần {attempt + 1}/{retries}) cho text: '{text[:50]}...': {e}. Đang thử lại sau 1s...")
+                await asyncio.sleep(1)
+            else:
+                print(f"❌ LỖI NGHIÊM TRỌNG: Không thể tạo audio cho text '{text[:50]}...' sau {retries} lần thử. Lỗi: {e}")
+                return AudioSegment.silent(duration=0)
+
+
+def _crossfade_chunks(speech_chunks: list, pause_duration: int, crossfade_ms: int) -> AudioSegment:
+    """Ghép các đoạn audio lại với nhau bằng khoảng lặng và crossfade."""
+    if not speech_chunks:
+        return AudioSegment.silent(duration=0)
+
+    final_segment = speech_chunks[0]
+    pause_segment = AudioSegment.silent(duration=pause_duration)
+    for chunk in speech_chunks[1:]:
+        final_segment = final_segment.append(pause_segment, crossfade=0)
+        final_segment = final_segment.append(chunk, crossfade=crossfade_ms)
+    return final_segment
+
+def adjust_audio_segment_to_duration(
+    segment: AudioSegment,
+    timeline_duration_ms: int,
+    config: dict
+) -> AudioSegment:
+    """
+    Hàm tối ưu tốc độ và khoảng lặng siêu cấp, tập trung vào sự tự nhiên.
+    """
+    current_duration_ms = len(segment)
+    if current_duration_ms == 0 or timeline_duration_ms <= 0:
+        return segment
+
+    speed_factor = current_duration_ms / timeline_duration_ms
+
+    if config["COMFORT_SPEED_MIN"] <= speed_factor <= config["COMFORT_SPEED_MAX"]:
+        return segment.speedup(playback_speed=speed_factor)
+
+    if speed_factor < config["COMFORT_SPEED_MIN"]:
+        slowed_segment = segment.speedup(playback_speed=config["COMFORT_SPEED_MIN"])
+        remaining_time_to_pad = timeline_duration_ms - len(slowed_segment)
+        if remaining_time_to_pad > 0:
+            padding = AudioSegment.silent(duration=remaining_time_to_pad)
+            return slowed_segment + padding
+        return slowed_segment
+
+    if speed_factor > config["COMFORT_SPEED_MAX"]:
+        time_to_cut_ms = current_duration_ms - timeline_duration_ms
+
+        speech_chunks = split_on_silence(
+            segment,
+            min_silence_len=config["MIN_SILENCE_LEN_MS"],
+            silence_thresh=config["SILENCE_THRESH_DBFS"],
+            keep_silence=0
+        )
+
+        if len(speech_chunks) <= 1:
+            clamped_speed = min(config["MAX_SPEED_LIMIT"], speed_factor)
+            return segment.speedup(playback_speed=clamped_speed)
+
+        total_speech_duration = sum(len(chunk) for chunk in speech_chunks)
+        total_silence_duration = current_duration_ms - total_speech_duration
+        min_total_silence_to_keep = config["MIN_PAUSE_AFTER_TRIM_MS"] * (len(speech_chunks) - 1)
+        max_silence_can_cut = total_silence_duration - min_total_silence_to_keep
+
+        if max_silence_can_cut >= time_to_cut_ms:
+            silence_duration_after_cut = total_silence_duration - time_to_cut_ms
+            pause_between_chunks = silence_duration_after_cut / (len(speech_chunks) - 1) if len(speech_chunks) > 1 else 0
+            return _crossfade_chunks(speech_chunks, int(pause_between_chunks), config["CROSSFADE_DURATION_MS"])
+
+        else:
+            trimmed_segment = _crossfade_chunks(speech_chunks, config["MIN_PAUSE_AFTER_TRIM_MS"], config["CROSSFADE_DURATION_MS"])
+            duration_after_trim = len(trimmed_segment)
+
+            if duration_after_trim > timeline_duration_ms:
+                new_speed_factor = duration_after_trim / timeline_duration_ms
+                clamped_speed = min(config["MAX_SPEED_LIMIT"], new_speed_factor)
+                return trimmed_segment.speedup(playback_speed=clamped_speed)
+
+            return trimmed_segment
+
+    return segment
+
+async def srt_to_audio_timeline_async(srt_path: str, config: dict) -> AudioSegment:
+    """Hàm chính để chuyển đổi SRT sang Audio."""
+    try:
+        with open(srt_path, "r", encoding="utf-8") as f:
+            subs = list(srt.parse(f.read()))
+    except FileNotFoundError:
+        print(f"Lỗi: Không tìm thấy file '{srt_path}'")
+        return None
+
+    if not subs: return AudioSegment.silent(duration=0)
+
+    total_duration_ms = math.ceil(subs[-1].end.total_seconds() * 1000)
+    final_audio = AudioSegment.silent(duration=total_duration_ms)
+    print(f"Tổng thời lượng audio dự kiến: {total_duration_ms / 1000:.2f} giây.")
+
+    print("Đang tạo giọng nói cho các phụ đề...")
+    tasks = [generate_tts_segment_in_memory(sub.content.strip().replace('\n', ' '), config["VOICE"], config.get("TTS_RETRIES", 3)) for sub in subs]
+    audio_segments = await tqdm.gather(*tasks, desc="Đang tạo TTS")
+
+    print("Đang tối ưu thông minh và ghép audio theo timeline...")
+    for i, sub in enumerate(tqdm(subs, desc="Đang tối ưu audio")):
+        segment = audio_segments[i]
+        start_ms = int(sub.start.total_seconds() * 1000)
+        end_ms = int(sub.end.total_seconds() * 1000)
+        timeline_duration_ms = end_ms - start_ms
+
+        if timeline_duration_ms <= 0: continue
+
+        optimized_segment = adjust_audio_segment_to_duration(
+            segment, timeline_duration_ms, config
+        )
+
+        if len(optimized_segment) > timeline_duration_ms:
+            optimized_segment = optimized_segment[:timeline_duration_ms]
+
+        final_audio = final_audio.overlay(optimized_segment, position=start_ms)
+
+    return final_audio
+
+async def main():
+    """Hàm bao bọc để chạy toàn bộ quá trình."""
+    srt_content = """1
+00:00:03,133 --> 00:00:04,366
+Tom lao thẳng lên trời
+
+2
+00:00:04,366 --> 00:00:06,300
+Ngoảnh đầu nhìn lại thì thấy trạm không gian.
+
+3
+00:00:06,300 --> 00:00:09,300
+Còn có một phi hành gia cũng đeo túi, và người đó đang chào hỏi Tom.
+
+4
+00:00:09,300 --> 00:00:11,400
+Tom cũng lịch sự đáp lại.
+"""
+    srt_file = "/content/20250903140247927_vi_translated.srt"
+    #with open(srt_file, "w", encoding="utf-8") as f:
+        #f.write(srt_content)
+
+    output_file = "final_super_optimized_output.wav"
+
+    print("Bắt đầu quá trình chuyển đổi với cấu hình tối ưu...")
+    try:
+        combined_audio = await srt_to_audio_timeline_async(srt_file, CONFIG)
+        if combined_audio is not None:
+            combined_audio.export(output_file, format="wav")
+            print(f"✅ Hoàn tất! Audio đã được xuất ra tại: {output_file}")
+
+            print("\n▶️  Nghe trực tiếp file audio đã tạo:")
+            display(Audio(output_file, autoplay=False))
+
+    except Exception as e:
+        print(f"Đã xảy ra lỗi nghiêm trọng trong quá trình xử lý: {e}")
+
+# --- BƯỚC 3: CHẠY HÀM MAIN (CHẠY TRONG CELL COLAB) ---
+await main()
+
