@@ -1,0 +1,177 @@
+# -*- coding: utf-8 -*-
+"""
+CloneTTS tối ưu - Hỗ trợ file SRT lớn, giọng Việt Neural
+"""
+
+import asyncio
+import srt
+import io
+import re
+import nest_asyncio
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
+import edge_tts
+from tqdm.asyncio import tqdm
+from tqdm import tqdm as tqdm_sync
+
+# Áp dụng nest_asyncio để chạy trong Colab/Jupyter
+nest_asyncio.apply()
+
+# --- Cấu hình mặc định ---
+VOICE = "vi-VN-NamMinhNeural"  # hoặc "vi-VN-NuMaiNeural"
+DEFAULT_SILENCE_THRESH = -40  # dBFS
+DEFAULT_MIN_SILENCE_LEN = 400  # ms
+MIN_PAUSE_AFTER_TRIM = 150  # ms
+MAX_CHARS_PER_REQUEST = 4000  # giới hạn ký tự cho TTS mỗi request
+
+# --- Hàm chia text dài thành các chunk nhỏ ---
+def split_text_into_chunks(text, max_len=MAX_CHARS_PER_REQUEST):
+    sentences = re.split(r'(?<=[.?!])\s+', text)
+    chunks = []
+    current_chunk = ""
+    for s in sentences:
+        if len(current_chunk) + len(s) + 1 > max_len:
+            chunks.append(current_chunk.strip())
+            current_chunk = s
+        else:
+            current_chunk += " " + s
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+    return chunks
+
+# --- Tạo audio TTS trong bộ nhớ ---
+async def generate_tts_segment_in_memory(text: str, voice: str) -> AudioSegment:
+    chunks = split_text_into_chunks(text)
+    final_audio = AudioSegment.silent(duration=0)
+    for chunk in chunks:
+        clean_chunk = chunk.replace('\n',' ').replace('\r',' ').strip()
+        if not clean_chunk: 
+            continue
+        communicate = edge_tts.Communicate(clean_chunk, voice)
+        audio_buffer = io.BytesIO()
+        async for c in communicate.stream():
+            if c["type"] == "audio":
+                audio_buffer.write(c["data"])
+        audio_buffer.seek(0)
+        final_audio += AudioSegment.from_file(audio_buffer, format="mp3")
+    return final_audio
+
+# --- Tối ưu tốc độ thông minh ---
+def optimize_segment_speed(
+    segment: AudioSegment, 
+    timeline_duration_ms: int, 
+    min_speed: float, 
+    max_speed: float,
+    silence_thresh: int,
+    min_silence_len: int
+) -> AudioSegment:
+    current_duration_ms = len(segment)
+    
+    if current_duration_ms < timeline_duration_ms:
+        speed_factor = current_duration_ms / timeline_duration_ms
+        clamped_speed = max(min_speed, speed_factor)
+        return segment.speedup(playback_speed=clamped_speed)
+    
+    elif current_duration_ms > timeline_duration_ms:
+        time_to_cut_ms = current_duration_ms - timeline_duration_ms
+        speech_chunks = split_on_silence(
+            segment,
+            min_silence_len=min_silence_len,
+            silence_thresh=silence_thresh,
+            keep_silence=0
+        )
+        if len(speech_chunks) <= 1:
+            speed_factor = current_duration_ms / timeline_duration_ms
+            clamped_speed = min(max_speed, speed_factor)
+            return segment.speedup(playback_speed=clamped_speed)
+        
+        total_speech_duration = sum(len(c) for c in speech_chunks)
+        total_silence_duration = current_duration_ms - total_speech_duration
+        silence_to_keep = MIN_PAUSE_AFTER_TRIM * (len(speech_chunks) - 1)
+        max_silence_can_cut = total_silence_duration - silence_to_keep
+        
+        if max_silence_can_cut >= time_to_cut_ms:
+            silence_duration_after_cut = total_silence_duration - time_to_cut_ms
+            pause_between_chunks = silence_duration_after_cut / (len(speech_chunks) - 1)
+            final_segment = speech_chunks[0]
+            for chunk in speech_chunks[1:]:
+                final_segment += AudioSegment.silent(duration=pause_between_chunks) + chunk
+            return final_segment
+        else:
+            trimmed_segment = speech_chunks[0]
+            for chunk in speech_chunks[1:]:
+                trimmed_segment += AudioSegment.silent(duration=MIN_PAUSE_AFTER_TRIM) + chunk
+            duration_after_trim = len(trimmed_segment)
+            if duration_after_trim > timeline_duration_ms:
+                speed_factor = duration_after_trim / timeline_duration_ms
+                clamped_speed = min(max_speed, speed_factor)
+                return trimmed_segment.speedup(playback_speed=clamped_speed)
+            return trimmed_segment
+    return segment
+
+# --- Chuyển SRT sang Audio ---
+async def srt_to_audio_timeline_async(
+    srt_path: str, voice: str, min_speed: float, max_speed: float,
+    silence_thresh: int, min_silence_len: int
+) -> AudioSegment:
+    try:
+        with open(srt_path, "r", encoding="utf-8") as f:
+            subs = list(srt.parse(f.read()))
+    except FileNotFoundError:
+        print(f"Lỗi: Không tìm thấy file '{srt_path}'")
+        return None
+    if not subs:
+        return AudioSegment.silent(duration=0)
+    
+    total_duration_ms = int(subs[-1].end.total_seconds() * 1000)
+    final_audio = AudioSegment.silent(duration=total_duration_ms)
+    print(f"Tổng thời lượng audio dự kiến: {total_duration_ms/1000:.2f} giây.")
+
+    print("Đang tạo giọng nói cho các phụ đề...")
+    audio_segments = []
+    for sub in tqdm_sync(subs, desc="TTS"):
+        segment = await generate_tts_segment_in_memory(sub.content.strip(), voice)
+        audio_segments.append(segment)
+
+    print("Đang tối ưu và ghép audio theo timeline...")
+    for i, sub in enumerate(tqdm_sync(subs, desc="Ghép Audio")):
+        segment = audio_segments[i]
+        start_ms = int(sub.start.total_seconds() * 1000)
+        timeline_duration_ms = int(sub.end.total_seconds() * 1000) - start_ms
+        if timeline_duration_ms <= 0: continue
+        optimized_segment = optimize_segment_speed(
+            segment, timeline_duration_ms, min_speed, max_speed,
+            silence_thresh, min_silence_len
+        )
+        final_audio = final_audio.overlay(optimized_segment, position=start_ms)
+    return final_audio
+
+# --- Wrapper để chạy ---
+def process_srt_file(
+    srt_path: str, out_path: str, voice: str = VOICE, min_speed: float = 0.75,
+    max_speed: float = 1.25, silence_dbfs: int = DEFAULT_SILENCE_THRESH,
+    min_silence_len_ms: int = DEFAULT_MIN_SILENCE_LEN
+):
+    print("Bắt đầu quá trình chuyển đổi...")
+    try:
+        combined_audio = asyncio.run(srt_to_audio_timeline_async(
+            srt_path, voice, min_speed, max_speed, silence_dbfs, min_silence_len_ms
+        ))
+        if combined_audio is not None:
+            combined_audio.export(out_path, format="wav")
+            print(f"✅ Hoàn tất! Audio đã được xuất ra tại: {out_path}")
+    except Exception as e:
+        print(f"Đã xảy ra lỗi trong quá trình xử lý: {e}")
+
+# --- Ví dụ sử dụng ---
+if __name__ == "__main__":
+    srt_file = "/content/example_vi_translated2.srt"  # đường dẫn file SRT
+    output_file = "optimized_output.wav"
+    process_srt_file(
+        srt_file, out_path=output_file,
+        voice=VOICE,
+        min_speed=0.75,
+        max_speed=1.25,
+        silence_dbfs=-30,
+        min_silence_len_ms=700
+    )
