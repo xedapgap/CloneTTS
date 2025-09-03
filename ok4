@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
+""" !pip install edge-tts 
+!pip install srt
+
 CloneTTS tối ưu - Hỗ trợ file SRT lớn, giọng Việt Neural
 """
 
